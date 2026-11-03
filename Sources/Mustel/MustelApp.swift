@@ -1161,7 +1161,7 @@ struct SessionRow: View {
                     .help("Reconnect")
                 }
                 Button(action: session.hotReload) {
-                    Image(systemName: "arrow.triangle.2.circlepath")
+                    Image(systemName: "bolt.fill")
                 }
                 .help("Hot reload")
                 .disabled(!session.isReady)
@@ -1235,7 +1235,7 @@ struct VSCodeSessionRow: View {
             }
             Spacer(minLength: 4)
             Button(action: onHotReload) {
-                Image(systemName: "arrow.triangle.2.circlepath")
+                Image(systemName: "bolt.fill")
             }
             .help("Hot reload in VS Code")
             .disabled(status?.hasSuffix("requested…") == true)
@@ -1270,6 +1270,7 @@ struct ContentView: View {
                         HStack(spacing: 6) {
                             ProgressView()
                                 .controlSize(.small)
+                                .frame(width: 16, height: 16)
                             Text("Scanning active Flutter runs…")
                                 .font(.caption)
                                 .lineLimit(1)
@@ -1281,6 +1282,7 @@ struct ContentView: View {
                         ))
                     } else {
                         Image(systemName: "arrow.clockwise")
+                            .frame(width: 16, height: 16)
                             .transition(.asymmetric(
                                 insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.08)),
                                 removal: .opacity.animation(.easeOut(duration: 0.06))
@@ -1294,6 +1296,7 @@ struct ContentView: View {
                     launchError = nil
                 } label: {
                     Image(systemName: isLaunching ? "xmark" : "plus")
+                        .frame(width: 16, height: 16)
                 }
                 .help(isLaunching ? "Cancel launch" : "Launch a Flutter project")
             }
