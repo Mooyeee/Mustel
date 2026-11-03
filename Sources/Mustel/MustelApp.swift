@@ -1257,13 +1257,6 @@ struct ContentView: View {
                 Text("Mustel")
                     .font(.title3.weight(.semibold))
                 Spacer()
-                Button {
-                    isLaunching.toggle()
-                    launchError = nil
-                } label: {
-                    Image(systemName: isLaunching ? "xmark" : "plus")
-                }
-                .help(isLaunching ? "Cancel launch" : "Launch a Flutter project")
                 Button(action: model.refreshDiscovery) {
                     if model.isDiscovering {
                         HStack(spacing: 6) {
@@ -1279,6 +1272,13 @@ struct ContentView: View {
                 }
                 .disabled(model.isDiscovering)
                 .help("Discover running Flutter apps")
+                Button {
+                    isLaunching.toggle()
+                    launchError = nil
+                } label: {
+                    Image(systemName: isLaunching ? "xmark" : "plus")
+                }
+                .help(isLaunching ? "Cancel launch" : "Launch a Flutter project")
             }
 
             Text(model.discoveryStatus)
