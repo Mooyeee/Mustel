@@ -1298,7 +1298,7 @@ struct DiscoveryBanner: View {
                 .foregroundStyle(tint)
             Text(extensionInstalled
                  ? "IDE extension installed, all runs are discovered automatically."
-                 : "Mobile runs are discovered automatically; web and desktop runs are not.")
+                 : "IDE extension not installed, only mobile runs are discovered automatically.")
                 .font(.caption)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
