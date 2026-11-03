@@ -1179,16 +1179,19 @@ struct SessionRow: View {
                         Image(systemName: "stop.fill")
                     }
                     .help("Stop app")
+                    .glassButtonStyleIfAvailable()
                 } else if session.target.mode == .run {
                     Button(action: onRemove) {
                         Image(systemName: "xmark")
                     }
                     .help("Remove finished run")
+                    .glassButtonStyleIfAvailable()
                 } else if !session.isRunning {
                     Button(action: onReconnect) {
                         Image(systemName: "arrow.clockwise")
                     }
                     .help("Reconnect")
+                    .glassButtonStyleIfAvailable()
                 }
                 Button(action: session.hotReload) {
                     Image(systemName: "bolt.fill")
@@ -1196,6 +1199,7 @@ struct SessionRow: View {
                 }
                 .help("Hot reload")
                 .disabled(!session.isReady)
+                .glassButtonStyleIfAvailable()
 
                 Button(action: session.hotRestart) {
                     Image(systemName: "arrow.counterclockwise")
@@ -1203,6 +1207,7 @@ struct SessionRow: View {
                 }
                 .help("Hot restart")
                 .disabled(!session.isReady)
+                .glassButtonStyleIfAvailable()
             }
             Text(session.target.mode == .run ? "Started by Mustel" : "Discovered existing run")
                 .font(.caption2)
@@ -1272,15 +1277,39 @@ struct VSCodeSessionRow: View {
             }
             .help("Hot reload in VS Code")
             .disabled(status?.hasSuffix("requested…") == true)
+            .glassButtonStyleIfAvailable()
             Button(action: onHotRestart) {
                 Image(systemName: "arrow.counterclockwise")
                     .frame(width: 16, height: 16)
             }
             .help("Hot restart in VS Code")
             .disabled(status?.hasSuffix("requested…") == true)
+            .glassButtonStyleIfAvailable()
         }
         .padding(8)
         .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func glassButtonStyleIfAvailable() -> some View {
+        if #available(macOS 26.0, *) {
+            buttonStyle(.glass)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func glassPlateIfAvailable(cornerRadius: CGFloat = 8, padding: CGFloat = 5) -> some View {
+        if #available(macOS 26.0, *) {
+            self
+                .padding(padding)
+                .glassEffect(in: RoundedRectangle(cornerRadius: cornerRadius))
+        } else {
+            self
+        }
     }
 }
 
@@ -1356,6 +1385,7 @@ struct ContentView: View {
                 }
                 .disabled(model.isDiscovering)
                 .help("Discover running Flutter apps")
+                .glassButtonStyleIfAvailable()
                 Button {
                     isLaunching.toggle()
                     launchError = nil
@@ -1364,6 +1394,7 @@ struct ContentView: View {
                         .frame(width: 16, height: 16)
                 }
                 .help(isLaunching ? "Cancel launch" : "Launch a Flutter project")
+                .glassButtonStyleIfAvailable()
             }
             .animation(.easeInOut(duration: 0.2), value: model.isDiscovering)
 
@@ -1382,6 +1413,7 @@ struct ContentView: View {
                         Image(systemName: "arrow.clockwise")
                     }
                     .help("Refresh VS Code sessions")
+                    .glassButtonStyleIfAvailable()
                 }
                 Text(model.vscodeBridgeStatus)
                     .font(.caption2)
@@ -1447,6 +1479,7 @@ struct ContentView: View {
                             .foregroundStyle(projectPath.isEmpty ? Color.secondary : Color.primary)
                         Spacer()
                         Button("Choose…", action: chooseProject)
+                            .glassButtonStyleIfAvailable()
                     }
                     Picker("Device", selection: $model.selectedDeviceID) {
                         ForEach(model.devices) { device in
@@ -1472,6 +1505,7 @@ struct ContentView: View {
                         Button("Run") { launchProject() }
                             .keyboardShortcut(.defaultAction)
                             .disabled(projectPath.isEmpty || model.selectedDeviceID.isEmpty)
+                            .glassButtonStyleIfAvailable()
                     }
                 }
             } else if !model.sessions.isEmpty {
@@ -1539,6 +1573,7 @@ struct ContentView: View {
                             )
                             .toggleStyle(.checkbox)
                             .disabled(!model.canConfigureLaunchAtLogin)
+                            .glassPlateIfAvailable()
                             if let message = launchAtLoginError ?? model.launchAtLoginMessage {
                                 Text(message)
                                     .font(.caption2)
@@ -1645,7 +1680,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         } else if popover.isShown {
             popover.performClose(sender)
         } else {
+            if #available(macOS 14.0, *) {
+                NSApp.activate()
+            } else {
+                NSApp.activate(ignoringOtherApps: true)
+            }
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
         }
     }
 
