@@ -1471,7 +1471,7 @@ struct ContentView: View {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     let model = AppModel()
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let popover = NSPopover()
@@ -1500,6 +1500,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
         popover.behavior = .transient
+        popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: ContentView(model: model))
         popover.contentSize = NSSize(width: 380, height: 400)
         localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) {
@@ -1536,6 +1537,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func quitApplication() {
         NSApp.terminate(nil)
+    }
+
+    func popoverDidShow(_ notification: Notification) {
+        guard let button = statusItem.button,
+              let statusBarWindow = button.window,
+              let popoverWindow = popover.contentViewController?.view.window else {
+            return
+        }
+
+        let buttonFrame = statusBarWindow.convertToScreen(button.convert(button.bounds, to: nil))
+        var popoverFrame = popoverWindow.frame
+        popoverFrame.origin.x = buttonFrame.midX - popoverFrame.width / 2
+        popoverFrame.origin.y = buttonFrame.minY - popoverFrame.height
+        popoverWindow.setFrame(popoverFrame, display: true)
     }
 
     private func closePopoverIfClickedOutside() {

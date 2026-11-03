@@ -14,11 +14,9 @@ BIN_DIRECTORY="$(swift build --configuration release --product mustel --show-bin
 mkdir -p "$BUILD_APP/Contents/MacOS" "$BUILD_APP/Contents/Resources" "$INSTALL_DIRECTORY"
 cp "$BIN_DIRECTORY/mustel" "$BUILD_APP/Contents/MacOS/mustel"
 cp "$PROJECT_ROOT/Resources/Info.plist" "$BUILD_APP/Contents/Info.plist"
-cp "$PROJECT_ROOT/Resources/Mustel-0.1.3.icns" "$BUILD_APP/Contents/Resources/Mustel-0.1.3.icns"
+cp "$PROJECT_ROOT/Resources/Mustel-0.1.4.icns" "$BUILD_APP/Contents/Resources/Mustel-0.1.4.icns"
 cp "$PROJECT_ROOT/Sources/Mustel/MustelMenuBar.png" "$BUILD_APP/Contents/Resources/MustelMenuBar.png"
 cp -R "$BIN_DIRECTORY/Mustel_Mustel.bundle" "$BUILD_APP/Contents/Resources/"
-/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.ionutdanielfagadau.Mustel.resources" \
-    "$BUILD_APP/Contents/Resources/Mustel_Mustel.bundle/Contents/Info.plist"
 codesign --force --sign - --identifier com.ionutdanielfagadau.Mustel "$BUILD_APP"
 ditto "$BUILD_APP" "$INSTALL_APP"
 codesign --verify --deep --strict "$INSTALL_APP"
