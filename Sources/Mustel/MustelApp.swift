@@ -912,7 +912,15 @@ final class AppModel: ObservableObject {
         }
     }
 
-    static let discoveryIntervalOptions = [2, 5, 10, 30, 60]
+    static let discoveryIntervalOptions = [5, 10, 30, 60, 300]
+
+    static func discoveryIntervalLabel(for interval: Int) -> String {
+        switch interval {
+        case 60: "Every minute"
+        case 300: "Every 5 minutes"
+        default: "Every \(interval) seconds"
+        }
+    }
 
     private func scheduleDiscoveryTimer() {
         discoveryTimer?.invalidate()
@@ -1265,9 +1273,18 @@ struct ContentView: View {
                             Text("Scanning active Flutter runs…")
                                 .font(.caption)
                                 .lineLimit(1)
+                                .fixedSize()
                         }
+                        .transition(.asymmetric(
+                            insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.08)),
+                            removal: .opacity.animation(.easeOut(duration: 0.06))
+                        ))
                     } else {
                         Image(systemName: "arrow.clockwise")
+                            .transition(.asymmetric(
+                                insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.08)),
+                                removal: .opacity.animation(.easeOut(duration: 0.06))
+                            ))
                     }
                 }
                 .disabled(model.isDiscovering)
@@ -1280,6 +1297,7 @@ struct ContentView: View {
                 }
                 .help(isLaunching ? "Cancel launch" : "Launch a Flutter project")
             }
+            .animation(.easeInOut(duration: 0.2), value: model.isDiscovering)
 
             Text(model.discoveryStatus)
                 .font(.caption)
@@ -1427,7 +1445,7 @@ struct ContentView: View {
                                 .font(.caption.weight(.medium))
                             Picker("Scan for new runs", selection: $model.discoveryInterval) {
                                 ForEach(AppModel.discoveryIntervalOptions, id: \.self) { interval in
-                                    Text(interval == 60 ? "Every minute" : "Every \(interval) seconds")
+                                    Text(AppModel.discoveryIntervalLabel(for: interval))
                                         .tag(interval)
                                 }
                             }
