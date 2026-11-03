@@ -1162,12 +1162,14 @@ struct SessionRow: View {
                 }
                 Button(action: session.hotReload) {
                     Image(systemName: "bolt.fill")
+                        .frame(width: 16, height: 16)
                 }
                 .help("Hot reload")
                 .disabled(!session.isReady)
 
                 Button(action: session.hotRestart) {
                     Image(systemName: "arrow.counterclockwise")
+                        .frame(width: 16, height: 16)
                 }
                 .help("Hot restart")
                 .disabled(!session.isReady)
@@ -1236,11 +1238,13 @@ struct VSCodeSessionRow: View {
             Spacer(minLength: 4)
             Button(action: onHotReload) {
                 Image(systemName: "bolt.fill")
+                    .frame(width: 16, height: 16)
             }
             .help("Hot reload in VS Code")
             .disabled(status?.hasSuffix("requested…") == true)
             Button(action: onHotRestart) {
                 Image(systemName: "arrow.counterclockwise")
+                    .frame(width: 16, height: 16)
             }
             .help("Hot restart in VS Code")
             .disabled(status?.hasSuffix("requested…") == true)
