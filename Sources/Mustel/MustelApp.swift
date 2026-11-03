@@ -31,6 +31,34 @@ struct FlutterTarget: Identifiable, Hashable, Sendable {
     let mode: FlutterSessionMode
 }
 
+private enum FlutterExecutableLocator {
+    static func resolve(_ configuredPath: String, projectPath: String? = nil) -> String {
+        let configuredPath = configuredPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !configuredPath.isEmpty, !configuredPath.contains("/") else {
+            return configuredPath
+        }
+
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        var candidates: [String] = []
+        if let projectPath {
+            candidates.append("\(projectPath)/.fvm/flutter_sdk/bin/\(configuredPath)")
+        }
+        candidates.append(contentsOf: (ProcessInfo.processInfo.environment["PATH"] ?? "")
+            .split(separator: ":")
+            .map { "\($0)/\(configuredPath)" })
+        candidates.append(contentsOf: [
+            "\(home)/development/flutter/bin/\(configuredPath)",
+            "\(home)/flutter/bin/\(configuredPath)",
+            "\(home)/fvm/default/bin/\(configuredPath)",
+            "\(home)/.fvm/default/bin/\(configuredPath)",
+            "/opt/homebrew/bin/\(configuredPath)",
+            "/usr/local/bin/\(configuredPath)"
+        ])
+
+        return candidates.first(where: FileManager.default.isExecutableFile(atPath:)) ?? configuredPath
+    }
+}
+
 private struct DiscoverySnapshot: Sendable {
     let devices: [FlutterDeviceInfo]
     let targets: [FlutterTarget]
@@ -142,7 +170,8 @@ private enum FlutterRunDiscovery {
     }
 
     private static func runFlutter(_ executable: String, arguments: [String]) throws -> String {
-        try run(executable: "/usr/bin/env", arguments: [executable] + arguments)
+        let resolvedExecutable = FlutterExecutableLocator.resolve(executable)
+        return try run(executable: "/usr/bin/env", arguments: [resolvedExecutable] + arguments)
     }
 
     private static func run(executable: String, arguments: [String]) throws -> String {
@@ -624,7 +653,7 @@ final class FlutterSession: ObservableObject, Identifiable {
 
     func connect(using flutterExecutable: String) {
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        var arguments = [flutterExecutable]
+        var arguments = [FlutterExecutableLocator.resolve(flutterExecutable, projectPath: target.projectPath)]
         switch target.mode {
         case .attach:
             arguments.append(contentsOf: ["attach", "--machine", "--no-dds", "--device-id", target.deviceID])
@@ -863,7 +892,8 @@ final class AppModel: ObservableObject {
     private var isRefreshingVSCodeSessions = false
 
     init() {
-        flutterExecutable = UserDefaults.standard.string(forKey: "flutterExecutable") ?? "flutter"
+        flutterExecutable = UserDefaults.standard.string(forKey: "flutterExecutable")
+            ?? FlutterExecutableLocator.resolve("flutter")
         refreshLaunchAtLoginState()
         refreshDiscovery()
         refreshVSCodeSessions()
@@ -1470,8 +1500,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 380, height: 400)
         popover.contentViewController = NSHostingController(rootView: ContentView(model: model))
+        popover.contentSize = NSSize(width: 380, height: 400)
         localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) {
             [weak self] event in
             self?.closePopoverIfClickedOutside()

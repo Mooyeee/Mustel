@@ -32,7 +32,7 @@ The name comes from *Mustela*, the genus that includes ferrets and weasels: curi
 
 - macOS 13 or later
 - Xcode Command Line Tools and Swift 5.9 or later
-- Flutter installed and available as `flutter`, or the path to its executable
+- Flutter installed. Mustel checks the app's `PATH`, common SDK locations, and a project's FVM SDK; otherwise enter the executable path in **Settings → Flutter executable**
 - `librsvg` (`rsvg-convert`) to generate the app icons
 - For VS Code integration: VS Code 1.85 or later and the [Dart extension](https://marketplace.visualstudio.com/items?itemName=Dart-Code.dart-code)
 
@@ -46,7 +46,7 @@ brew install librsvg
 open "$HOME/Applications/Mustel.app"
 ```
 
-The installer generates the icons from [`Resources/ferret.svg`](./Resources/ferret.svg), builds the release app, installs it in `~/Applications`, and verifies its code signature. Run the installer again after pulling updates.
+The installer generates the icons from [`Resources/ferret.svg`](./Resources/ferret.svg), builds the release app, installs it in `~/Applications`, and verifies its code signature. If `flutter` is available in the installer's `PATH`, it saves that executable path for the app so it can also find Flutter when opened from Finder. Run the installer again after pulling updates.
 
 The app is locally ad-hoc signed and **not notarized**. This setup is intended for building from source on your own Mac, not distributing a ready-to-run app to other people. Launch at login uses Apple's `SMAppService` API to start the regular app in your user session; Mustel is not a privileged daemon. If macOS requests approval, allow it under **System Settings → General → Login Items**.
 
@@ -107,7 +107,7 @@ Mustel invokes the Flutter executable you configure. Flutter itself may perform 
 
 ## Troubleshooting
 
-- **Mustel cannot find Flutter:** open **Settings → Flutter executable** and enter the absolute path to the `flutter` executable. Apps launched from Finder may not inherit the same shell `PATH` as Terminal.
+- **Mustel cannot find Flutter:** Mustel searches its available `PATH`, common Flutter SDK locations, and the project's `.fvm/flutter_sdk`. Apps launched from Finder may not inherit the same shell `PATH` as Terminal. If automatic lookup fails, open **Settings → Flutter executable** and enter the absolute path to the `flutter` executable (for example, `/Users/you/development/flutter/bin/flutter`).
 - **An existing run is missing:** refresh discovery. For mobile runs with multiple connected devices, restart with `flutter run -d <device-id>`. Desktop/web runs need `--vmservice-out-file` to be discovered automatically.
 - **Attach reports that `.dart_tool/package_graph.json` is missing:** run `flutter pub get` in the project directory, then reconnect.
 - **VS Code sessions do not appear:** confirm the Dart extension and Mustel Bridge are enabled, start a Dart/Flutter debug session, and reload VS Code after installing the VSIX.
