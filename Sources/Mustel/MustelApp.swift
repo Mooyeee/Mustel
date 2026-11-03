@@ -1539,7 +1539,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         NSApp.terminate(nil)
     }
 
-    func popoverDidShow(_ notification: Notification) {
+    func popoverWillShow(_ notification: Notification) {
         guard let button = statusItem.button,
               let statusBarWindow = button.window,
               let popoverWindow = popover.contentViewController?.view.window else {

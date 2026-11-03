@@ -4,7 +4,7 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ICONSET="$PROJECT_ROOT/.build/Mustel.iconset"
 MENU_ICON="$PROJECT_ROOT/Sources/Mustel/MustelMenuBar.png"
-APP_ICON="$PROJECT_ROOT/Resources/Mustel-0.1.4.icns"
+APP_ICON="$PROJECT_ROOT/Resources/Mustel-0.1.6.icns"
 VSCODE_ICON="$PROJECT_ROOT/vscode-extension/images/icon.png"
 FERRET_SVG="$PROJECT_ROOT/Resources/ferret.svg"
 PADDED_APP_SVG="$PROJECT_ROOT/.build/mustel-app-icon.svg"
