@@ -1327,6 +1327,7 @@ struct ContentView: View {
                 Text("Mobile runs are discovered automatically. For existing desktop/web runs, use `--vmservice-out-file`; or launch from here.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             } else if model.isDiscovering && model.sessions.isEmpty && !isLaunching {
                 HStack(spacing: 8) {
                     ProgressView()
