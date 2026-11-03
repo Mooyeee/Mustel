@@ -1,0 +1,12 @@
+# SwiftPM and Xcode build products
+.build/
+.swiftpm/
+DerivedData/
+
+# macOS
+.DS_Store
+
+# VS Code extension build and package artifacts
+vscode-extension/node_modules/
+vscode-extension/dist/
+vscode-extension/*.vsix

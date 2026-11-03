@@ -1,0 +1,33 @@
+{
+  "name": "mustel-vscode",
+  "displayName": "Mustel Bridge",
+  "icon": "images/icon.png",
+  "license": "MIT",
+  "description": "Control active Dart/Flutter debug sessions from the Mustel macOS menu bar.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionDependencies": [
+    "Dart-Code.dart-code"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onDebug"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "16.18.11",
+    "@types/vscode": "1.85.0",
+    "typescript": "4.9.5"
+  }
+}
