@@ -384,6 +384,30 @@ struct VSCodeDebugTarget: Identifiable, Hashable, Sendable {
 private struct VSCodeBridgeSnapshot: Sendable {
     let targets: [VSCodeDebugTarget]
     let status: String
+    let extensionInstalled: Bool
+}
+
+private enum VSCodeExtensionProbe {
+    private static let folderPrefix = "local.mustel-vscode-"
+    private static let extensionDirectories = [
+        ".vscode/extensions",
+        ".vscode-insiders/extensions",
+        ".vscode-oss/extensions",
+        ".vscode-server/extensions",
+        ".cursor/extensions",
+        ".windsurf/extensions"
+    ]
+
+    static func isInstalled() -> Bool {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        return extensionDirectories.contains { relativePath in
+            let directory = home.appendingPathComponent(relativePath, isDirectory: true)
+            guard let entries = try? FileManager.default.contentsOfDirectory(atPath: directory.path) else {
+                return false
+            }
+            return entries.contains { $0.hasPrefix(folderPrefix) }
+        }
+    }
 }
 
 private enum VSCodeBridge {
@@ -878,6 +902,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var discoveryStatus = "Looking for Flutter runs…"
     @Published private(set) var isDiscovering = false
     @Published private(set) var vscodeBridgeStatus = "Connecting to the VS Code bridge…"
+    @Published private(set) var vscodeExtensionInstalled = false
     @Published private(set) var vscodeCommandStatuses: [String: String] = [:]
     @Published private(set) var launchAtLoginEnabled = false
     @Published private(set) var launchAtLoginMessage: String?
@@ -1045,11 +1070,16 @@ final class AppModel: ObservableObject {
         Task {
             let result = await Task.detached(priority: .utility) {
                 let discovered = VSCodeBridge.discover()
-                return VSCodeBridgeSnapshot(targets: discovered.targets, status: discovered.status)
+                return VSCodeBridgeSnapshot(
+                    targets: discovered.targets,
+                    status: discovered.status,
+                    extensionInstalled: VSCodeExtensionProbe.isInstalled()
+                )
             }.value
             isRefreshingVSCodeSessions = false
             vscodeSessions = result.targets
             vscodeBridgeStatus = result.status
+            vscodeExtensionInstalled = result.extensionInstalled
             let activeIDs = Set(result.targets.map(\.id))
             vscodeCommandStatuses = vscodeCommandStatuses.filter { activeIDs.contains($0.key) }
         }
@@ -1254,6 +1284,37 @@ struct VSCodeSessionRow: View {
     }
 }
 
+struct DiscoveryBanner: View {
+    let extensionInstalled: Bool
+
+    private var tint: Color {
+        extensionInstalled ? .green : .yellow
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: extensionInstalled ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(tint)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(extensionInstalled
+                     ? "IDE extension installed, all runs are discovered automatically."
+                     : "IDE extension not installed, only mobile runs are discovered automatically.")
+                    .foregroundStyle(.primary)
+                if !extensionInstalled {
+                    Text("For existing desktop/web runs, use --vmservice-out-file or launch from here.")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .font(.caption)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+    }
+}
+
 struct ContentView: View {
     @ObservedObject var model: AppModel
     @State private var isLaunching = false
@@ -1370,10 +1431,7 @@ struct ContentView: View {
                 }
                 .frame(height: min(CGFloat(model.sessions.count) * 150, 300))
             } else if !isLaunching {
-                Text("Mobile runs are discovered automatically. For existing desktop/web runs, use `--vmservice-out-file`; or launch from here.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                DiscoveryBanner(extensionInstalled: model.vscodeExtensionInstalled)
             }
 
             if isLaunching {
