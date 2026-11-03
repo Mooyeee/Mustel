@@ -881,6 +881,13 @@ final class AppModel: ObservableObject {
     @Published private(set) var vscodeCommandStatuses: [String: String] = [:]
     @Published private(set) var launchAtLoginEnabled = false
     @Published private(set) var launchAtLoginMessage: String?
+    @Published var discoveryInterval: Int = 5 {
+        didSet {
+            guard discoveryInterval != oldValue else { return }
+            UserDefaults.standard.set(discoveryInterval, forKey: "discoveryInterval")
+            scheduleDiscoveryTimer()
+        }
+    }
     @Published var flutterExecutable: String {
         didSet {
             UserDefaults.standard.set(flutterExecutable, forKey: "flutterExecutable")
@@ -894,14 +901,31 @@ final class AppModel: ObservableObject {
     init() {
         flutterExecutable = UserDefaults.standard.string(forKey: "flutterExecutable")
             ?? FlutterExecutableLocator.resolve("flutter")
+        let storedInterval = UserDefaults.standard.integer(forKey: "discoveryInterval")
+        discoveryInterval = AppModel.discoveryIntervalOptions.contains(storedInterval) ? storedInterval : 5
         refreshLaunchAtLoginState()
         refreshDiscovery()
         refreshVSCodeSessions()
-        discoveryTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refreshDiscovery() }
-        }
+        scheduleDiscoveryTimer()
         vscodeBridgeTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refreshVSCodeSessions() }
+        }
+    }
+
+    static let discoveryIntervalOptions = [5, 10, 30, 60, 300]
+
+    static func discoveryIntervalLabel(for interval: Int) -> String {
+        switch interval {
+        case 60: "Every minute"
+        case 300: "Every 5 minutes"
+        default: "Every \(interval) seconds"
+        }
+    }
+
+    private func scheduleDiscoveryTimer() {
+        discoveryTimer?.invalidate()
+        discoveryTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(discoveryInterval), repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.refreshDiscovery() }
         }
     }
 
@@ -1137,13 +1161,15 @@ struct SessionRow: View {
                     .help("Reconnect")
                 }
                 Button(action: session.hotReload) {
-                    Image(systemName: "arrow.triangle.2.circlepath")
+                    Image(systemName: "bolt.fill")
+                        .frame(width: 16, height: 16)
                 }
                 .help("Hot reload")
                 .disabled(!session.isReady)
 
                 Button(action: session.hotRestart) {
                     Image(systemName: "arrow.counterclockwise")
+                        .frame(width: 16, height: 16)
                 }
                 .help("Hot restart")
                 .disabled(!session.isReady)
@@ -1211,12 +1237,14 @@ struct VSCodeSessionRow: View {
             }
             Spacer(minLength: 4)
             Button(action: onHotReload) {
-                Image(systemName: "arrow.triangle.2.circlepath")
+                Image(systemName: "bolt.fill")
+                    .frame(width: 16, height: 16)
             }
             .help("Hot reload in VS Code")
             .disabled(status?.hasSuffix("requested…") == true)
             Button(action: onHotRestart) {
                 Image(systemName: "arrow.counterclockwise")
+                    .frame(width: 16, height: 16)
             }
             .help("Hot restart in VS Code")
             .disabled(status?.hasSuffix("requested…") == true)
@@ -1241,24 +1269,42 @@ struct ContentView: View {
                 Text("Mustel")
                     .font(.title3.weight(.semibold))
                 Spacer()
+                Button(action: model.refreshDiscovery) {
+                    if model.isDiscovering {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .controlSize(.small)
+                                .frame(width: 16, height: 16)
+                            Text("Scanning active Flutter runs…")
+                                .font(.caption)
+                                .lineLimit(1)
+                                .fixedSize()
+                        }
+                        .transition(.asymmetric(
+                            insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.08)),
+                            removal: .opacity.animation(.easeOut(duration: 0.06))
+                        ))
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                            .frame(width: 16, height: 16)
+                            .transition(.asymmetric(
+                                insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.08)),
+                                removal: .opacity.animation(.easeOut(duration: 0.06))
+                            ))
+                    }
+                }
+                .disabled(model.isDiscovering)
+                .help("Discover running Flutter apps")
                 Button {
                     isLaunching.toggle()
                     launchError = nil
                 } label: {
                     Image(systemName: isLaunching ? "xmark" : "plus")
+                        .frame(width: 16, height: 16)
                 }
                 .help(isLaunching ? "Cancel launch" : "Launch a Flutter project")
-                Button(action: model.refreshDiscovery) {
-                    if model.isDiscovering {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .disabled(model.isDiscovering)
-                .help("Discover running Flutter apps")
             }
+            .animation(.easeInOut(duration: 0.2), value: model.isDiscovering)
 
             Text(model.discoveryStatus)
                 .font(.caption)
@@ -1323,18 +1369,11 @@ struct ContentView: View {
                     }
                 }
                 .frame(height: min(CGFloat(model.sessions.count) * 150, 300))
-            } else if !model.isDiscovering && !isLaunching {
+            } else if !isLaunching {
                 Text("Mobile runs are discovered automatically. For existing desktop/web runs, use `--vmservice-out-file`; or launch from here.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-            } else if model.isDiscovering && model.sessions.isEmpty && !isLaunching {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text("Scanning active Flutter runs…")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             if isLaunching {
@@ -1404,6 +1443,23 @@ struct ContentView: View {
                                 .textFieldStyle(.roundedBorder)
                                 .font(.caption)
                             Text("If Flutter is not found, enter its absolute path.")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Scan for new runs")
+                                .font(.caption.weight(.medium))
+                            Picker("Scan for new runs", selection: $model.discoveryInterval) {
+                                ForEach(AppModel.discoveryIntervalOptions, id: \.self) { interval in
+                                    Text(AppModel.discoveryIntervalLabel(for: interval))
+                                        .tag(interval)
+                                }
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                            .font(.caption)
+                            Text("How often Mustel looks for new Flutter runs.")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
