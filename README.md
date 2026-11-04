@@ -30,7 +30,7 @@ The name comes from *Mustela*, the genus that includes ferrets and weasels: curi
 
 ## Requirements
 
-- macOS 13 or later
+- macOS 14 or later
 - Xcode Command Line Tools and Swift 5.9 or later
 - Flutter installed. Mustel checks the app's `PATH`, common SDK locations, and a project's FVM SDK; otherwise enter the executable path in **Settings → Flutter executable**
 - `librsvg` (`rsvg-convert`) to generate the app icons
@@ -120,6 +120,12 @@ Build and run the menu-bar app from source:
 ```sh
 swift build --configuration debug --product mustel
 swift run mustel
+```
+
+Run the unit tests:
+
+```sh
+swift test
 ```
 
 Build the release app and install it with the same script used above:
