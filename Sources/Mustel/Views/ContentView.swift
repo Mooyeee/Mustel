@@ -97,7 +97,7 @@ struct ContentView: View {
             )
             .frame(maxWidth: .infinity, alignment: .leading)
         } else if model.sessions.count > 1 {
-            ScrollView {
+            ScrollViewIfNeeded(maxHeight: 300) {
                 VStack(spacing: 8) {
                     ForEach(model.sessions) { session in
                         SessionRow(
@@ -109,7 +109,6 @@ struct ContentView: View {
                     }
                 }
             }
-            .frame(height: min(CGFloat(model.sessions.count) * 150, 300))
         } else if !model.launchForm.isPresented {
             DiscoveryBanner(extensionInstalled: model.vscodeExtensionInstalled)
         }
