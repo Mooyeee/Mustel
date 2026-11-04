@@ -24,7 +24,7 @@ struct VSCodeSectionView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
             if !sessions.isEmpty {
-                ScrollView {
+                ScrollViewIfNeeded(maxHeight: 174) {
                     VStack(spacing: 6) {
                         ForEach(sessions) { target in
                             VSCodeSessionRow(
@@ -36,7 +36,6 @@ struct VSCodeSectionView: View {
                         }
                     }
                 }
-                .frame(height: min(CGFloat(sessions.count) * 58, 174))
             }
         }
     }
