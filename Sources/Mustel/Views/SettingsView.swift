@@ -9,15 +9,16 @@ struct SettingsView: View {
             Button {
                 isExpanded.toggle()
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                        .font(.caption.weight(.semibold))
-                    Text("Settings")
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 16, weight: .heavy))
+                    .rotationEffect(.degrees(isExpanded ? 0 : 180))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 28)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help(isExpanded ? "Hide settings" : "Show settings")
 
             if isExpanded {
                 VStack(alignment: .leading, spacing: 14) {
