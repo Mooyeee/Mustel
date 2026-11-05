@@ -6,10 +6,25 @@ struct VSCodeSessionRow: View {
     let onHotReload: () -> Void
     let onHotRestart: () -> Void
 
+    private var appName: String? {
+        guard !target.workspace.isEmpty else { return nil }
+        let pubspec = URL(fileURLWithPath: target.workspace).appendingPathComponent("pubspec.yaml")
+        if let contents = try? String(contentsOf: pubspec, encoding: .utf8) {
+            for line in contents.split(whereSeparator: \.isNewline) where line.hasPrefix("name:") {
+                let value = line.dropFirst(5)
+                    .trimmingCharacters(in: .whitespaces)
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+                if !value.isEmpty { return value }
+            }
+        }
+        let folder = URL(fileURLWithPath: target.workspace).lastPathComponent
+        return folder.isEmpty ? nil : folder
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(target.name)
+                Text(appName.map { "\($0) - \(target.name)" } ?? target.name)
                     .font(.subheadline.weight(.medium))
                     .lineLimit(1)
                 Text(target.workspace.isEmpty
