@@ -10,13 +10,19 @@ final class AppViewModel {
     private(set) var vscodeSessions: [VSCodeDebugTarget] = []
     private(set) var devices: [FlutterDeviceInfo] = []
     private(set) var discoveryStatus = "Looking for Flutter runs…"
-    private(set) var isDiscovering = false
+    private(set) var isDiscovering = false {
+        didSet {
+            guard isDiscovering != oldValue else { return }
+            logoAnimator.setScanning(isDiscovering)
+        }
+    }
     private(set) var vscodeBridgeStatus = "Connecting to the VS Code bridge…"
     private(set) var vscodeExtensionInstalled = false
     private(set) var vscodeCommandStatuses: [String: VSCodeCommandStatus] = [:]
 
     let settings: SettingsViewModel
     let launchForm: LaunchFormViewModel
+    let logoAnimator: LogoAnimator
 
     @ObservationIgnored private let discoveryService: FlutterDiscovering
     @ObservationIgnored private let bridge: VSCodeBridging
@@ -38,15 +44,21 @@ final class AppViewModel {
             SessionViewModel(target: target, flutterExecutable: executable)
         }
     ) {
+        let logoAnimator = LogoAnimator()
         self.discoveryService = discoveryService
         self.bridge = bridge
         self.extensionProbe = extensionProbe
         self.makeSession = makeSession
+        self.logoAnimator = logoAnimator
         self.settings = SettingsViewModel(store: settingsStore, launchAtLogin: launchAtLogin)
         self.launchForm = launchForm ?? LaunchFormViewModel()
         settings.onDiscoveryIntervalChanged = { [weak self] in
             self?.scheduleDiscoveryTimer()
         }
+        settings.onAlwaysAnimateLogoChanged = { [weak logoAnimator] enabled in
+            logoAnimator?.setAlwaysAnimate(enabled)
+        }
+        logoAnimator.setAlwaysAnimate(settings.alwaysAnimateLogo)
     }
 
     func start() {
@@ -124,6 +136,7 @@ final class AppViewModel {
     func shutdown() {
         discoveryTimer?.invalidate()
         vscodeBridgeTimer?.invalidate()
+        logoAnimator.stop()
         sessions.forEach { $0.stop() }
     }
 

@@ -8,7 +8,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Mustel",
-            resources: [.copy("MustelMenuBar.png")]
+            resources: [
+                .copy("MustelMenuBar.png"),
+                .copy("Animations")
+            ]
         ),
         .testTarget(
             name: "MustelTests",

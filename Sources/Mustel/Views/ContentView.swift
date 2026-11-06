@@ -43,21 +43,9 @@ struct ContentView: View {
         .frame(width: 380)
     }
 
-    private static let headerIcon: NSImage = {
-        let url = Bundle.main.url(forResource: "MustelMenuBar", withExtension: "png")
-            ?? Bundle.module.url(forResource: "MustelMenuBar", withExtension: "png")
-        let image = url.flatMap { NSImage(contentsOf: $0) } ?? NSImage()
-        image.isTemplate = true
-        return image
-    }()
-
     private var header: some View {
         HStack {
-            Image(nsImage: Self.headerIcon)
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 28, height: 16)
+            LogoView(animator: model.logoAnimator)
             Text("Mustel")
                 .font(.title3.weight(.semibold))
             Spacer()

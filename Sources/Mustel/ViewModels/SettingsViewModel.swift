@@ -18,6 +18,14 @@ final class SettingsViewModel {
         }
     }
 
+    var alwaysAnimateLogo: Bool {
+        didSet {
+            guard alwaysAnimateLogo != oldValue else { return }
+            store.alwaysAnimateLogo = alwaysAnimateLogo
+            onAlwaysAnimateLogoChanged?(alwaysAnimateLogo)
+        }
+    }
+
     private(set) var launchAtLoginEnabled = false
     private(set) var launchAtLoginMessage: String?
     private(set) var launchAtLoginError: String?
@@ -25,6 +33,7 @@ final class SettingsViewModel {
     @ObservationIgnored private let store: SettingsStore
     @ObservationIgnored private let launchAtLogin: LaunchAtLoginControlling
     @ObservationIgnored var onDiscoveryIntervalChanged: (() -> Void)?
+    @ObservationIgnored var onAlwaysAnimateLogoChanged: ((Bool) -> Void)?
 
     static let discoveryIntervalOptions = [5, 10, 30, 60, 300]
 
@@ -37,6 +46,7 @@ final class SettingsViewModel {
         flutterExecutable = store.flutterExecutable ?? FlutterExecutableLocator.resolve("flutter")
         let storedInterval = store.discoveryInterval ?? 0
         discoveryInterval = Self.discoveryIntervalOptions.contains(storedInterval) ? storedInterval : 5
+        alwaysAnimateLogo = store.alwaysAnimateLogo
         refreshLaunchAtLoginState()
     }
 

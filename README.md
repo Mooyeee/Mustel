@@ -21,7 +21,7 @@ The name comes from *Mustela*, the genus that includes ferrets and weasels: curi
 
 ## What it does
 
-- **Lives in the macOS menu bar.** Click the ferret to open Mustel; right-click it to quit.
+- **Lives in the macOS menu bar.** Click the ferret to open Mustel; right-click it to quit. The ferret runs while Mustel scans for Flutter runs, or permanently if you enable **Always animate the logo** in Settings.
 - **Discovers existing mobile Flutter runs.** Mustel scans for supported Android and iOS runs and attaches to them automatically.
 - **Controls VS Code debug sessions.** With the companion extension installed, use hot reload and hot restart on active Dart/Flutter sessions in one or more VS Code windows. Mustel sends the request to Dart Code; it does not start a competing `flutter attach` for those sessions.
 - **Launches Flutter projects.** Choose a project and device in Mustel to start and control a new `flutter run --machine` session, including macOS desktop and web targets.

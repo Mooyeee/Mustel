@@ -18,14 +18,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     private func configureStatusItem() {
         guard let button = statusItem.button else { return }
-        let imageURL = Bundle.main.url(forResource: "MustelMenuBar", withExtension: "png")
-            ?? Bundle.module.url(forResource: "MustelMenuBar", withExtension: "png")
-        if let imageURL, let image = NSImage(contentsOf: imageURL) {
-            image.size = NSSize(width: 28, height: 16)
-            image.isTemplate = true
-            button.image = image
-        } else {
-            button.image = NSImage(systemSymbolName: "pawprint.fill", accessibilityDescription: "Mustel")
+        button.image = model.logoAnimator.currentImage
+        model.logoAnimator.onFrameChanged = { [weak self] image in
+            self?.statusItem.button?.image = image
         }
         button.toolTip = "Mustel"
         button.target = self

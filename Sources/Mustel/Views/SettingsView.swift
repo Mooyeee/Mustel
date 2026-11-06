@@ -51,6 +51,16 @@ struct SettingsView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
+                        Toggle("Always animate the logo", isOn: $settings.alwaysAnimateLogo)
+                            .toggleStyle(.checkbox)
+                            .glassPlateIfAvailable()
+                        Text("Keep the running ferret animation active when Mustel is not scanning.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
                         Toggle(
                             "Launch at login",
                             isOn: Binding(

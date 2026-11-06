@@ -78,6 +78,30 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertEqual(settings.launchAtLoginError, "denied")
     }
 
+    func testPersistsAlwaysAnimateLogo() {
+        let store = SettingsStore(defaults: defaults)
+        let settings = SettingsViewModel(store: store, launchAtLogin: FakeLaunchAtLogin())
+        var notifications: [Bool] = []
+        settings.onAlwaysAnimateLogoChanged = { notifications.append($0) }
+
+        settings.alwaysAnimateLogo = true
+
+        XCTAssertTrue(store.alwaysAnimateLogo)
+        XCTAssertEqual(notifications, [true])
+
+        settings.alwaysAnimateLogo = true
+        XCTAssertEqual(notifications, [true])
+    }
+
+    func testLoadsStoredAlwaysAnimateLogo() {
+        let store = SettingsStore(defaults: defaults)
+        store.alwaysAnimateLogo = true
+
+        let settings = SettingsViewModel(store: store, launchAtLogin: FakeLaunchAtLogin())
+
+        XCTAssertTrue(settings.alwaysAnimateLogo)
+    }
+
     func testIntervalLabels() {
         XCTAssertEqual(SettingsViewModel.discoveryIntervalLabel(for: 5), "Every 5 seconds")
         XCTAssertEqual(SettingsViewModel.discoveryIntervalLabel(for: 60), "Every minute")

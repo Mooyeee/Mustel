@@ -4,6 +4,7 @@ final class SettingsStore {
     private enum Key: String {
         case flutterExecutable
         case discoveryInterval
+        case alwaysAnimateLogo
     }
 
     private let defaults: UserDefaults
@@ -23,5 +24,10 @@ final class SettingsStore {
             return defaults.integer(forKey: Key.discoveryInterval.rawValue)
         }
         set { defaults.set(newValue, forKey: Key.discoveryInterval.rawValue) }
+    }
+
+    var alwaysAnimateLogo: Bool {
+        get { defaults.bool(forKey: Key.alwaysAnimateLogo.rawValue) }
+        set { defaults.set(newValue, forKey: Key.alwaysAnimateLogo.rawValue) }
     }
 }
