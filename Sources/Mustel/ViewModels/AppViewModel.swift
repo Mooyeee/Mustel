@@ -7,7 +7,7 @@ final class AppViewModel {
     typealias SessionFactory = @MainActor (FlutterTarget, String) -> SessionViewModel
 
     private(set) var sessions: [SessionViewModel] = []
-    private(set) var vscodeSessions: [VSCodeDebugTarget] = []
+    private(set) var ideSessions: [VSCodeDebugTarget] = []
     private(set) var devices: [FlutterDeviceInfo] = []
     private(set) var discoveryStatus = "Looking for Flutter runs…"
     private(set) var isDiscovering = false {
@@ -16,9 +16,9 @@ final class AppViewModel {
             logoAnimator.setScanning(isDiscovering)
         }
     }
-    private(set) var vscodeBridgeStatus = "Connecting to the VS Code bridge…"
-    private(set) var vscodeExtensionInstalled = false
-    private(set) var vscodeCommandStatuses: [String: VSCodeCommandStatus] = [:]
+    private(set) var ideBridgeStatus = "Connecting to the IDE bridge…"
+    private(set) var ideBridgeInstalled = false
+    private(set) var ideCommandStatuses: [String: VSCodeCommandStatus] = [:]
 
     let settings: SettingsViewModel
     let launchForm: LaunchFormViewModel
@@ -26,18 +26,18 @@ final class AppViewModel {
 
     @ObservationIgnored private let discoveryService: FlutterDiscovering
     @ObservationIgnored private let bridge: VSCodeBridging
-    @ObservationIgnored private let extensionProbe: VSCodeExtensionProbing
+    @ObservationIgnored private let ideBridgeProbe: IDEBridgeProbing
     @ObservationIgnored private let makeSession: SessionFactory
     @ObservationIgnored private var discoveryTimer: Timer?
-    @ObservationIgnored private var vscodeBridgeTimer: Timer?
-    @ObservationIgnored private var isRefreshingVSCodeSessions = false
+    @ObservationIgnored private var ideBridgeTimer: Timer?
+    @ObservationIgnored private var isRefreshingIDESessions = false
     @ObservationIgnored private var started = false
 
     init(
         settingsStore: SettingsStore = SettingsStore(),
         discoveryService: FlutterDiscovering = FlutterDiscoveryService(),
         bridge: VSCodeBridging = VSCodeBridgeClient(),
-        extensionProbe: VSCodeExtensionProbing = VSCodeExtensionProbe(),
+        ideBridgeProbe: IDEBridgeProbing = IDEBridgeProbe(),
         launchAtLogin: LaunchAtLoginControlling = LaunchAtLoginService(),
         launchForm: LaunchFormViewModel? = nil,
         makeSession: @escaping SessionFactory = { target, executable in
@@ -47,7 +47,7 @@ final class AppViewModel {
         let logoAnimator = LogoAnimator()
         self.discoveryService = discoveryService
         self.bridge = bridge
-        self.extensionProbe = extensionProbe
+        self.ideBridgeProbe = ideBridgeProbe
         self.makeSession = makeSession
         self.logoAnimator = logoAnimator
         self.settings = SettingsViewModel(store: settingsStore, launchAtLogin: launchAtLogin)
@@ -65,10 +65,10 @@ final class AppViewModel {
         guard !started else { return }
         started = true
         refreshDiscovery()
-        refreshVSCodeSessions()
+        refreshIDESessions()
         scheduleDiscoveryTimer()
-        vscodeBridgeTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refreshVSCodeSessions() }
+        ideBridgeTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.refreshIDESessions() }
         }
     }
 
@@ -115,17 +115,17 @@ final class AppViewModel {
         sessions.removeAll { $0.id == session.id }
     }
 
-    func runVSCodeCommand(_ command: VSCodeCommand, on target: VSCodeDebugTarget) {
-        vscodeCommandStatuses[target.id] = VSCodeCommandStatus(command: command, phase: .requested)
+    func runIDECommand(_ command: VSCodeCommand, on target: VSCodeDebugTarget) {
+        ideCommandStatuses[target.id] = VSCodeCommandStatus(command: command, phase: .requested)
         let bridge = bridge
         Task {
             do {
                 try await Task.detached(priority: .userInitiated) {
                     try bridge.perform(command, on: target)
                 }.value
-                vscodeCommandStatuses[target.id] = VSCodeCommandStatus(command: command, phase: .completed)
+                ideCommandStatuses[target.id] = VSCodeCommandStatus(command: command, phase: .completed)
             } catch {
-                vscodeCommandStatuses[target.id] = VSCodeCommandStatus(
+                ideCommandStatuses[target.id] = VSCodeCommandStatus(
                     command: command,
                     phase: .failed(error.localizedDescription)
                 )
@@ -135,31 +135,31 @@ final class AppViewModel {
 
     func shutdown() {
         discoveryTimer?.invalidate()
-        vscodeBridgeTimer?.invalidate()
+        ideBridgeTimer?.invalidate()
         logoAnimator.stop()
         sessions.forEach { $0.stop() }
     }
 
-    func refreshVSCodeSessions() {
-        guard !isRefreshingVSCodeSessions else { return }
-        isRefreshingVSCodeSessions = true
+    func refreshIDESessions() {
+        guard !isRefreshingIDESessions else { return }
+        isRefreshingIDESessions = true
         let bridge = bridge
-        let probe = extensionProbe
+        let probe = ideBridgeProbe
         Task {
             let result = await Task.detached(priority: .utility) {
                 let discovered = bridge.discover()
                 return VSCodeBridgeSnapshot(
                     targets: discovered.targets,
                     status: discovered.status,
-                    extensionInstalled: probe.isInstalled()
+                    bridgeInstalled: probe.isInstalled()
                 )
             }.value
-            isRefreshingVSCodeSessions = false
-            vscodeSessions = result.targets
-            vscodeBridgeStatus = result.status
-            vscodeExtensionInstalled = result.extensionInstalled
+            isRefreshingIDESessions = false
+            ideSessions = result.targets
+            ideBridgeStatus = result.status
+            ideBridgeInstalled = result.bridgeInstalled
             let activeIDs = Set(result.targets.map(\.id))
-            vscodeCommandStatuses = vscodeCommandStatuses.filter { activeIDs.contains($0.key) }
+            ideCommandStatuses = ideCommandStatuses.filter { activeIDs.contains($0.key) }
         }
     }
 

@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct VSCodeSectionView: View {
+struct IDESectionView: View {
     let sessions: [VSCodeDebugTarget]
     let status: String
     let commandStatuses: [String: VSCodeCommandStatus]
@@ -10,13 +10,13 @@ struct VSCodeSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("VS Code")
+                Text("IDE")
                     .font(.headline)
                 Spacer()
                 Button(action: onRefresh) {
                     Image(systemName: "arrow.clockwise")
                 }
-                .help("Refresh VS Code sessions")
+                .help("Refresh IDE sessions")
                 .glassButtonStyleIfAvailable()
             }
             Text(status)
@@ -27,7 +27,7 @@ struct VSCodeSectionView: View {
                 ScrollViewIfNeeded(maxHeight: 174) {
                     VStack(spacing: 6) {
                         ForEach(sessions) { target in
-                            VSCodeSessionRow(
+                            IDESessionRow(
                                 target: target,
                                 status: commandStatuses[target.id],
                                 onHotReload: { onCommand(.hotReload, target) },

@@ -14,13 +14,13 @@ struct ContentView: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
 
-            VSCodeSectionView(
-                sessions: model.vscodeSessions,
-                status: model.vscodeBridgeStatus,
-                commandStatuses: model.vscodeCommandStatuses,
-                onRefresh: model.refreshVSCodeSessions,
+            IDESectionView(
+                sessions: model.ideSessions,
+                status: model.ideBridgeStatus,
+                commandStatuses: model.ideCommandStatuses,
+                onRefresh: model.refreshIDESessions,
                 onCommand: { command, target in
-                    model.runVSCodeCommand(command, on: target)
+                    model.runIDECommand(command, on: target)
                 }
             )
 
@@ -112,7 +112,7 @@ struct ContentView: View {
                 }
             }
         } else if !model.launchForm.isPresented {
-            DiscoveryBanner(extensionInstalled: model.vscodeExtensionInstalled)
+            DiscoveryBanner(bridgeInstalled: model.ideBridgeInstalled)
         }
     }
 }

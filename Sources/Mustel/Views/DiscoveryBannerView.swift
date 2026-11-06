@@ -1,23 +1,23 @@
 import SwiftUI
 
 struct DiscoveryBanner: View {
-    let extensionInstalled: Bool
+    let bridgeInstalled: Bool
 
     private var tint: Color {
-        extensionInstalled ? .green : .yellow
+        bridgeInstalled ? .green : .yellow
     }
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: extensionInstalled ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+            Image(systemName: bridgeInstalled ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                 .font(.caption)
                 .foregroundStyle(tint)
             VStack(alignment: .leading, spacing: 3) {
-                Text(extensionInstalled
-                     ? "IDE extension installed, all runs are discovered automatically."
-                     : "IDE extension not installed, only mobile runs are discovered automatically.")
+                Text(bridgeInstalled
+                     ? "IDE bridge installed, all runs are discovered automatically."
+                     : "IDE bridge not installed, only mobile runs are discovered automatically.")
                     .foregroundStyle(.primary)
-                if !extensionInstalled {
+                if !bridgeInstalled {
                     Text("For existing desktop/web runs, use --vmservice-out-file or launch from here.")
                         .foregroundStyle(.secondary)
                 }

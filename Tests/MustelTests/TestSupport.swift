@@ -87,7 +87,7 @@ struct FakeDiscoveryService: FlutterDiscovering {
 }
 
 struct FakeBridge: VSCodeBridging {
-    var discovery = VSCodeBridgeDiscovery(targets: [], status: "VS Code bridge connected.")
+    var discovery = VSCodeBridgeDiscovery(targets: [], status: "IDE bridge connected.")
     var performError: Error?
 
     func discover() -> VSCodeBridgeDiscovery {
@@ -99,7 +99,7 @@ struct FakeBridge: VSCodeBridging {
     }
 }
 
-struct FakeExtensionProbe: VSCodeExtensionProbing {
+struct FakeIDEBridgeProbe: IDEBridgeProbing {
     var installed = false
 
     func isInstalled() -> Bool {

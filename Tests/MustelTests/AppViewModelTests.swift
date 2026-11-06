@@ -141,7 +141,7 @@ final class AppViewModelTests: XCTestCase {
             settingsStore: store,
             discoveryService: FakeDiscoveryService(snapshot: snapshot()),
             bridge: FakeBridge(),
-            extensionProbe: FakeExtensionProbe(),
+            ideBridgeProbe: FakeIDEBridgeProbe(),
             launchAtLogin: FakeLaunchAtLogin(),
             launchForm: LaunchFormViewModel(projectPicker: FakeProjectPicker(path: nil)),
             makeSession: { target, _ in

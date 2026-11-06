@@ -29,7 +29,7 @@ enum BridgeError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidSocketPath:
-            return "The VS Code bridge descriptor contains an invalid socket path."
+            return "The IDE bridge descriptor contains an invalid socket path."
         case let .invalidResponse(message):
             return message
         case let .commandFailed(message):

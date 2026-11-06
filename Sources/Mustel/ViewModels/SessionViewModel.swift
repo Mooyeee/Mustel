@@ -11,10 +11,18 @@ final class SessionViewModel: Identifiable {
     private(set) var activity: String?
     private(set) var isRunning = false
     private(set) var diagnostics: [String] = []
+    private(set) var commandPhase: CommandPhase = .idle
+
+    enum CommandPhase: Equatable {
+        case idle
+        case running(VSCodeCommand)
+        case completed(VSCodeCommand)
+        case failed(VSCodeCommand)
+    }
 
     @ObservationIgnored private let service: FlutterSessionServicing
     @ObservationIgnored private var nextRequestID = 1
-    @ObservationIgnored private var pendingRequests: [String: String] = [:]
+    @ObservationIgnored private var pendingRequests: [String: VSCodeCommand] = [:]
     @ObservationIgnored private var wasStoppedByUser = false
     @ObservationIgnored private var lastErrorLine: String?
 
@@ -37,7 +45,18 @@ final class SessionViewModel: Identifiable {
     var appID: String? { state.appID }
     var statusText: String { activity ?? state.defaultText }
 
+    var isReloading: Bool { commandPhase == .running(.hotReload) }
+    var isRestarting: Bool { commandPhase == .running(.hotRestart) }
+    var reloadCompleted: Bool { commandPhase == .completed(.hotReload) }
+    var restartCompleted: Bool { commandPhase == .completed(.hotRestart) }
+    var isCommandInFlight: Bool {
+        if case .running = commandPhase { return true }
+        return false
+    }
+
     func connect() {
+        pendingRequests.removeAll()
+        commandPhase = .idle
         do {
             try service.start()
             isRunning = true
@@ -53,6 +72,8 @@ final class SessionViewModel: Identifiable {
         state = .stopped("Disconnected")
         activity = nil
         isRunning = false
+        commandPhase = .idle
+        pendingRequests.removeAll()
         service.stop()
     }
 
@@ -72,17 +93,19 @@ final class SessionViewModel: Identifiable {
 
         let requestID = nextRequestID
         nextRequestID += 1
-        let label = full ? "Hot restart" : "Hot reload"
-        pendingRequests[String(requestID)] = label
+        let command: VSCodeCommand = full ? .hotRestart : .hotReload
+        pendingRequests[String(requestID)] = command
         do {
             try service.send([
                 "id": requestID,
                 "method": "app.restart",
                 "params": ["appId": appID, "fullRestart": full]
             ])
-            activity = "\(label) requested"
+            commandPhase = .running(command)
+            activity = "\(command.label) requested"
         } catch {
             pendingRequests.removeValue(forKey: String(requestID))
+            commandPhase = .failed(command)
             activity = "Could not send command: \(error.localizedDescription)"
         }
     }
@@ -126,12 +149,13 @@ final class SessionViewModel: Identifiable {
                 } else {
                     state = .stopped("Flutter app stopped")
                     activity = nil
+                    commandPhase = .idle
                 }
             default:
                 break
             }
         case let .response(id, error):
-            guard let label = pendingRequests.removeValue(forKey: id) else {
+            guard let command = pendingRequests.removeValue(forKey: id) else {
                 if let error {
                     appendDiagnostic("Flutter error: \(error)")
                     if !isReady {
@@ -141,16 +165,19 @@ final class SessionViewModel: Identifiable {
                 return
             }
             if let error {
-                activity = "\(label) failed: \(brief(error))"
-                appendDiagnostic("\(label) failed: \(error)")
+                commandPhase = .failed(command)
+                activity = "\(command.label) failed: \(brief(error))"
+                appendDiagnostic("\(command.label) failed: \(error)")
             } else {
-                activity = "\(label) complete"
+                commandPhase = .completed(command)
+                activity = "\(command.label) complete"
             }
         }
     }
 
     private func handleProcessExit(code: Int32) {
         isRunning = false
+        commandPhase = .idle
         guard !wasStoppedByUser else { return }
         let processName = target.mode == .run ? "Flutter run" : "Flutter attach"
         state = .stopped(lastErrorLine ?? "\(processName) exited (code \(code))")

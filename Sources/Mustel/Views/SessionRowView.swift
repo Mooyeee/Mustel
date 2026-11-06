@@ -34,19 +34,27 @@ struct SessionRow: View {
                     .glassButtonStyleIfAvailable()
                 }
                 Button(action: session.hotReload) {
-                    Image(systemName: "bolt.fill")
-                        .frame(width: 16, height: 16)
+                    CommandIcon(
+                        command: .reload,
+                        isRunning: session.isReloading,
+                        completed: session.reloadCompleted
+                    )
+                    .frame(width: 16, height: 16)
                 }
                 .help("Hot reload")
-                .disabled(!session.isReady)
+                .disabled(!session.isReady || session.isCommandInFlight)
                 .glassButtonStyleIfAvailable()
 
                 Button(action: session.hotRestart) {
-                    Image(systemName: "arrow.counterclockwise")
-                        .frame(width: 16, height: 16)
+                    CommandIcon(
+                        command: .restart,
+                        isRunning: session.isRestarting,
+                        completed: session.restartCompleted
+                    )
+                    .frame(width: 16, height: 16)
                 }
                 .help("Hot restart")
-                .disabled(!session.isReady)
+                .disabled(!session.isReady || session.isCommandInFlight)
                 .glassButtonStyleIfAvailable()
             }
             Text(session.target.mode == .run ? "Started by Mustel" : "Discovered existing run")

@@ -1,10 +1,26 @@
 import SwiftUI
 
-struct VSCodeSessionRow: View {
+struct IDESessionRow: View {
     let target: VSCodeDebugTarget
     let status: VSCodeCommandStatus?
     let onHotReload: () -> Void
     let onHotRestart: () -> Void
+
+    private var isReloading: Bool {
+        status?.isInFlight == true && status?.command == .hotReload
+    }
+
+    private var isRestarting: Bool {
+        status?.isInFlight == true && status?.command == .hotRestart
+    }
+
+    private var reloadCompleted: Bool {
+        status?.command == .hotReload && status?.phase == .completed
+    }
+
+    private var restartCompleted: Bool {
+        status?.command == .hotRestart && status?.phase == .completed
+    }
 
     private var appName: String? {
         guard !target.workspace.isEmpty else { return nil }
@@ -28,7 +44,7 @@ struct VSCodeSessionRow: View {
                     .font(.subheadline.weight(.medium))
                     .lineLimit(1)
                 Text(target.workspace.isEmpty
-                     ? "Dart debug session"
+                     ? "Flutter run session"
                      : URL(fileURLWithPath: target.workspace).path)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -42,17 +58,17 @@ struct VSCodeSessionRow: View {
             }
             Spacer(minLength: 4)
             Button(action: onHotReload) {
-                Image(systemName: "bolt.fill")
+                CommandIcon(command: .reload, isRunning: isReloading, completed: reloadCompleted)
                     .frame(width: 16, height: 16)
             }
-            .help("Hot reload in VS Code")
+            .help("Hot reload in IDE")
             .disabled(status?.isInFlight == true)
             .glassButtonStyleIfAvailable()
             Button(action: onHotRestart) {
-                Image(systemName: "arrow.counterclockwise")
+                CommandIcon(command: .restart, isRunning: isRestarting, completed: restartCompleted)
                     .frame(width: 16, height: 16)
             }
-            .help("Hot restart in VS Code")
+            .help("Hot restart in IDE")
             .disabled(status?.isInFlight == true)
             .glassButtonStyleIfAvailable()
         }

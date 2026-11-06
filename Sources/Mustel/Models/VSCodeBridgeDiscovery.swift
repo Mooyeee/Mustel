@@ -8,5 +8,5 @@ struct VSCodeBridgeDiscovery: Sendable {
 struct VSCodeBridgeSnapshot: Sendable {
     let targets: [VSCodeDebugTarget]
     let status: String
-    let extensionInstalled: Bool
+    let bridgeInstalled: Bool
 }

@@ -18,7 +18,7 @@ struct VSCodeBridgeClient: VSCodeBridging {
         guard FileManager.default.fileExists(atPath: directory.path) else {
             return VSCodeBridgeDiscovery(
                 targets: [],
-                status: "Install and enable the VS Code bridge extension to control IDE sessions."
+                status: "Install and enable the Mustel bridge for VS Code or IntelliJ to control IDE sessions."
             )
         }
         let descriptorURLs: [URL]
@@ -30,14 +30,14 @@ struct VSCodeBridgeClient: VSCodeBridging {
         } catch {
             return VSCodeBridgeDiscovery(
                 targets: [],
-                status: "Could not read the VS Code bridge directory: \(error.localizedDescription)"
+                status: "Could not read the IDE bridge directory: \(error.localizedDescription)"
             )
         }
 
         guard !descriptorURLs.isEmpty else {
             return VSCodeBridgeDiscovery(
                 targets: [],
-                status: "Install and enable the VS Code bridge extension to control IDE sessions."
+                status: "Install and enable the Mustel bridge for VS Code or IntelliJ to control IDE sessions."
             )
         }
 
@@ -95,14 +95,14 @@ struct VSCodeBridgeClient: VSCodeBridging {
         if !errors.isEmpty {
             return VSCodeBridgeDiscovery(
                 targets: sortedTargets,
-                status: "VS Code bridge error: \(errors.joined(separator: " "))"
+                status: "IDE bridge error: \(errors.joined(separator: " "))"
             )
         }
         return VSCodeBridgeDiscovery(
             targets: sortedTargets,
             status: sortedTargets.isEmpty
-                ? "VS Code bridge connected; no Dart/Flutter debug sessions are active."
-                : "\(sortedTargets.count) VS Code debug session(s) available."
+                ? "IDE bridge connected; no Flutter run sessions are active."
+                : "\(sortedTargets.count) IDE run session(s) available."
         )
     }
 
@@ -113,7 +113,7 @@ struct VSCodeBridgeClient: VSCodeBridging {
             timeout: 120
         )
         guard response["ok"] as? Bool == true else {
-            throw BridgeError.commandFailed(response["error"] as? String ?? "VS Code rejected the command.")
+            throw BridgeError.commandFailed(response["error"] as? String ?? "The IDE bridge rejected the command.")
         }
     }
 
@@ -177,7 +177,7 @@ struct VSCodeBridgeClient: VSCodeBridging {
             }
         }
         guard connectResult == 0 else {
-            throw BridgeError.socketOperation("Could not connect to the VS Code bridge.")
+            throw BridgeError.socketOperation("Could not connect to the IDE bridge.")
         }
 
         var requestData = try JSONSerialization.data(withJSONObject: object)
@@ -193,7 +193,7 @@ struct VSCodeBridgeClient: VSCodeBridging {
                     0
                 )
                 guard count > 0 else {
-                    throw BridgeError.socketOperation("Could not send a request to the VS Code bridge.")
+                    throw BridgeError.socketOperation("Could not send a request to the IDE bridge.")
                 }
                 sent += count
             }
@@ -204,7 +204,7 @@ struct VSCodeBridgeClient: VSCodeBridging {
         while responseData.count < 65_536 {
             let count = Darwin.recv(descriptor, &buffer, buffer.count, 0)
             guard count > 0 else {
-                throw BridgeError.socketOperation("The VS Code bridge returned no response.")
+                throw BridgeError.socketOperation("The IDE bridge returned no response.")
             }
             responseData.append(contentsOf: buffer.prefix(count))
             if responseData.contains(10) {
@@ -213,7 +213,7 @@ struct VSCodeBridgeClient: VSCodeBridging {
         }
         guard let newline = responseData.firstIndex(of: 10),
               let response = try JSONSerialization.jsonObject(with: responseData[..<newline]) as? [String: Any] else {
-            throw BridgeError.invalidResponse("The VS Code bridge returned invalid data.")
+            throw BridgeError.invalidResponse("The IDE bridge returned invalid data.")
         }
         return response
     }

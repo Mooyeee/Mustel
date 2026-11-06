@@ -1,0 +1,19 @@
+<idea-plugin>
+    <id>local.mustel.intellij</id>
+    <name>Mustel Bridge</name>
+    <vendor>Mustel</vendor>
+    <description><![CDATA[
+        Exposes active Flutter run configurations to the Mustel macOS menu-bar app.
+        Mustel can then trigger hot reload and hot restart without attaching a second Flutter client.
+    ]]></description>
+    <idea-version since-build="231" until-build="261.*" />
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>io.flutter</depends>
+    <depends>Dart</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="local.mustel.intellij.MustelBridgeStartupActivity" />
+        <applicationService serviceImplementation="local.mustel.intellij.MustelBridgeService" />
+    </extensions>
+</idea-plugin>

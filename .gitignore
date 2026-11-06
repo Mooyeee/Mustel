@@ -10,3 +10,12 @@ DerivedData/
 vscode-extension/node_modules/
 vscode-extension/dist/
 vscode-extension/*.vsix
+
+# IntelliJ plugin build artifacts
+intellij-plugin/.gradle/
+intellij-plugin/.idea/
+intellij-plugin/build/
+intellij-plugin/.intellijPlatform/
+
+# Local IDE/Gradle configuration
+intellij-plugin/local.properties

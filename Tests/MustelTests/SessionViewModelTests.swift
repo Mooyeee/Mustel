@@ -38,11 +38,16 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertEqual(payload["method"] as? String, "app.restart")
         XCTAssertEqual((payload["params"] as? [String: Any])?["fullRestart"] as? Bool, false)
         XCTAssertEqual(session.activity, "Hot reload requested")
+        XCTAssertTrue(session.isReloading)
+        XCTAssertTrue(session.isCommandInFlight)
 
         let requestID = payload["id"] as! Int
         service.emit(.machine([.response(id: String(requestID), error: nil)]))
         await settle()
         XCTAssertEqual(session.activity, "Hot reload complete")
+        XCTAssertFalse(session.isReloading)
+        XCTAssertTrue(session.reloadCompleted)
+        XCTAssertFalse(session.isCommandInFlight)
     }
 
     func testHotRestartSendsFullRestart() async {
@@ -53,6 +58,8 @@ final class SessionViewModelTests: XCTestCase {
         let payload = service.sentPayloads[0]
         XCTAssertEqual((payload["params"] as? [String: Any])?["fullRestart"] as? Bool, true)
         XCTAssertEqual(session.activity, "Hot restart requested")
+        XCTAssertTrue(session.isRestarting)
+        XCTAssertTrue(session.isCommandInFlight)
     }
 
     func testHotReloadBeforeReadyWaits() {
@@ -77,6 +84,8 @@ final class SessionViewModelTests: XCTestCase {
 
         XCTAssertTrue(service.sentPayloads.isEmpty)
         XCTAssertEqual(session.activity, "Could not send command: write failed")
+        XCTAssertEqual(session.commandPhase, .failed(.hotReload))
+        XCTAssertFalse(session.isCommandInFlight)
     }
 
     func testResponseErrorIsReportedAndKeepsSessionReady() async {
@@ -90,6 +99,8 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertEqual(session.activity, "Hot reload failed: reload failed")
         XCTAssertTrue(session.isReady)
         XCTAssertEqual(session.diagnostics, ["Hot reload failed: reload failed"])
+        XCTAssertEqual(session.commandPhase, .failed(.hotReload))
+        XCTAssertFalse(session.isCommandInFlight)
     }
 
     func testAppStopFailureIsReported() async {
@@ -140,6 +151,7 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertTrue(service.isStopped)
         XCTAssertEqual(session.state, .stopped("Disconnected"))
         XCTAssertFalse(session.isRunning)
+        XCTAssertEqual(session.commandPhase, .idle)
     }
 
     func testStartFailureIsReported() {
