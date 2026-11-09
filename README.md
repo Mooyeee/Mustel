@@ -69,7 +69,7 @@ Use a current Node.js release for VSIX packaging. Install the generated `local.m
 code --install-extension local.mustel-vscode-0.1.0.vsix
 ```
 
-Reload the VS Code window if it was already open. Start a Dart/Flutter debug session; it will appear in Mustel's **IDE** section with its own hot reload and hot restart controls. The extension requires the Dart extension to be installed and enabled.
+Reload the VS Code window if it was already open. Start a Dart/Flutter debug session; it will appear in Mustel's **IDE sessions** section with its own hot reload and hot restart controls. The extension requires the Dart extension to be installed and enabled.
 
 ## Install the IntelliJ bridge
 
@@ -80,7 +80,7 @@ cd intellij-plugin
 ./gradlew buildPlugin
 ```
 
-Install the generated `build/distributions/mustel-intellij-0.1.0.zip` with **Settings → Plugins → Install Plugin from Disk...**, then restart the IDE. Start a Flutter run configuration; it will appear in Mustel's **IDE** section with hot reload and hot restart controls.
+Install the generated `build/distributions/mustel-intellij-0.1.0.zip` with **Settings → Plugins → Install Plugin from Disk...**, then restart the IDE. Start a Flutter run configuration; it will appear in Mustel's **IDE sessions** section with hot reload and hot restart controls.
 
 The plugin targets IntelliJ Platform 2023.1 or later and requires the Flutter and Dart plugins. To build against an already installed IDE instead of downloading a platform, pass the local paths explicitly:
 

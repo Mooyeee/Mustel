@@ -12,4 +12,13 @@ enum VSCodeCommand: String, Sendable {
             return "Hot restart"
         }
     }
+
+    var completedLabel: String {
+        switch self {
+        case .hotReload:
+            return "Hot reloaded"
+        case .hotRestart:
+            return "Hot restarted"
+        }
+    }
 }

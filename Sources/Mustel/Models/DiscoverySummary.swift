@@ -9,7 +9,7 @@ struct DiscoverySummary: Equatable {
     var statusText: String {
         var text: String
         if discoveredTargetCount == 0, ideManagedRuns > 0 {
-            text = "\(ideManagedRuns) IDE-managed Flutter run(s) found. They are not attached by a second Flutter tool; IDE sessions appear in the bridge below."
+            text = "\(ideManagedRuns) IDE-managed Flutter run(s) found. They are not attached by a second Flutter tool; IDE sessions appear through the bridge."
         } else if discoveredTargetCount == 0, unsupportedRuns > 0 {
             text = "Existing desktop/web runs need a VM Service info file (`--vmservice-out-file`) to attach automatically."
         } else if discoveredTargetCount == 0 {

@@ -40,6 +40,8 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertEqual(session.activity, "Hot reload requested")
         XCTAssertTrue(session.isReloading)
         XCTAssertTrue(session.isCommandInFlight)
+        XCTAssertEqual(session.commandStatus?.phase, .requested)
+        XCTAssertNil(session.commandCompletedAt)
 
         let requestID = payload["id"] as! Int
         service.emit(.machine([.response(id: String(requestID), error: nil)]))
@@ -48,6 +50,12 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertFalse(session.isReloading)
         XCTAssertTrue(session.reloadCompleted)
         XCTAssertFalse(session.isCommandInFlight)
+        XCTAssertNotNil(session.commandCompletedAt)
+        XCTAssertEqual(session.commandStatus?.completedAt, session.commandCompletedAt)
+
+        session.hotRestart()
+        XCTAssertNil(session.commandCompletedAt)
+        XCTAssertEqual(session.commandStatus?.phase, .requested)
     }
 
     func testHotRestartSendsFullRestart() async {
@@ -85,7 +93,23 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertTrue(service.sentPayloads.isEmpty)
         XCTAssertEqual(session.activity, "Could not send command: write failed")
         XCTAssertEqual(session.commandPhase, .failed(.hotReload))
+        XCTAssertEqual(session.commandStatus?.text, "Hot reload failed: Could not send command: write failed")
         XCTAssertFalse(session.isCommandInFlight)
+    }
+
+    func testStoppedAppIgnoresLateCommandResponse() async {
+        let (service, session) = await makeReadySession()
+        session.hotReload()
+        let requestID = service.sentPayloads[0]["id"] as! Int
+
+        service.emit(.machine([.event(name: "app.stop", appID: nil, error: nil, trace: nil)]))
+        await settle()
+        service.emit(.machine([.response(id: String(requestID), error: nil)]))
+        await settle()
+
+        XCTAssertEqual(session.commandPhase, .idle)
+        XCTAssertNil(session.commandCompletedAt)
+        XCTAssertEqual(session.statusText, "Flutter app stopped")
     }
 
     func testResponseErrorIsReportedAndKeepsSessionReady() async {
@@ -100,6 +124,7 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertTrue(session.isReady)
         XCTAssertEqual(session.diagnostics, ["Hot reload failed: reload failed"])
         XCTAssertEqual(session.commandPhase, .failed(.hotReload))
+        XCTAssertEqual(session.commandStatus?.text, "Hot reload failed: reload failed")
         XCTAssertFalse(session.isCommandInFlight)
     }
 

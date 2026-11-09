@@ -135,13 +135,26 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertEqual(session.state, .stopped("Disconnected"))
     }
 
-    private func makeModel() -> AppViewModel {
+    func testBridgeInstallationStatusIsKnownAfterRefresh() async throws {
+        let model = makeModel(bridgeInstalled: true)
+        XCTAssertFalse(model.hasCheckedIDEBridge)
+
+        model.refreshIDESessions()
+        for _ in 0..<100 where !model.hasCheckedIDEBridge {
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+
+        XCTAssertTrue(model.hasCheckedIDEBridge)
+        XCTAssertTrue(model.ideBridgeInstalled)
+    }
+
+    private func makeModel(bridgeInstalled: Bool = false) -> AppViewModel {
         let store = SettingsStore(defaults: defaults)
         return AppViewModel(
             settingsStore: store,
             discoveryService: FakeDiscoveryService(snapshot: snapshot()),
             bridge: FakeBridge(),
-            ideBridgeProbe: FakeIDEBridgeProbe(),
+            ideBridgeProbe: FakeIDEBridgeProbe(installed: bridgeInstalled),
             launchAtLogin: FakeLaunchAtLogin(),
             launchForm: LaunchFormViewModel(projectPicker: FakeProjectPicker(path: nil)),
             makeSession: { target, _ in

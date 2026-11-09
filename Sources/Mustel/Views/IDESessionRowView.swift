@@ -39,6 +39,7 @@ struct IDESessionRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            ProjectIconView(projectPath: target.workspace, platformHint: target.name)
             VStack(alignment: .leading, spacing: 3) {
                 Text(appName.map { "\($0) - \(target.name)" } ?? target.name)
                     .font(.subheadline.weight(.medium))
@@ -49,12 +50,7 @@ struct IDESessionRow: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                if let status {
-                    Text(status.text)
-                        .font(.caption2)
-                        .foregroundStyle(status.isFailure ? Color.red : Color.secondary)
-                        .lineLimit(2)
-                }
+                SessionStatusView(status: status, defaultText: "Running", isReady: true)
             }
             Spacer(minLength: 4)
             Button(action: onHotReload) {
@@ -63,16 +59,15 @@ struct IDESessionRow: View {
             }
             .help("Hot reload in IDE")
             .disabled(status?.isInFlight == true)
-            .glassButtonStyleIfAvailable()
+            .squareIconButtonStyle()
             Button(action: onHotRestart) {
                 CommandIcon(command: .restart, isRunning: isRestarting, completed: restartCompleted)
                     .frame(width: 16, height: 16)
             }
             .help("Hot restart in IDE")
             .disabled(status?.isInFlight == true)
-            .glassButtonStyleIfAvailable()
+            .squareIconButtonStyle()
         }
-        .padding(8)
-        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+        .padding(.vertical, 4)
     }
 }

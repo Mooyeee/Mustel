@@ -18,6 +18,7 @@ final class AppViewModel {
     }
     private(set) var ideBridgeStatus = "Connecting to the IDE bridge…"
     private(set) var ideBridgeInstalled = false
+    private(set) var hasCheckedIDEBridge = false
     private(set) var ideCommandStatuses: [String: VSCodeCommandStatus] = [:]
 
     let settings: SettingsViewModel
@@ -158,6 +159,7 @@ final class AppViewModel {
             ideSessions = result.targets
             ideBridgeStatus = result.status
             ideBridgeInstalled = result.bridgeInstalled
+            hasCheckedIDEBridge = true
             let activeIDs = Set(result.targets.map(\.id))
             ideCommandStatuses = ideCommandStatuses.filter { activeIDs.contains($0.key) }
         }

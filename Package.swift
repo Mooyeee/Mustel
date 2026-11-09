@@ -10,6 +10,8 @@ let package = Package(
             name: "Mustel",
             resources: [
                 .copy("MustelMenuBar.png"),
+                .copy("FlutterDefaultIcon.png"),
+                .copy("FlutterLicense.txt"),
                 .copy("Animations")
             ]
         ),
