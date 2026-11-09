@@ -87,6 +87,12 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popoverWindow.setFrame(popoverFrame, display: true)
     }
 
+    func popoverDidClose(_ notification: Notification) {
+        if model.launchForm.isPresented {
+            model.launchForm.toggle()
+        }
+    }
+
     func tearDown() {
         if let localEventMonitor {
             NSEvent.removeMonitor(localEventMonitor)
@@ -103,6 +109,10 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         let mouseLocation = NSEvent.mouseLocation
         if let popoverWindow = popover.contentViewController?.view.window,
            popoverWindow.frame.contains(mouseLocation) {
+            return
+        }
+        if model.launchForm.isPresented,
+           NSApp.windows.contains(where: { $0.isVisible && $0.frame.contains(mouseLocation) }) {
             return
         }
         if let button = statusItem.button,

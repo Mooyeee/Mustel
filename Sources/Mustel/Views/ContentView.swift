@@ -8,35 +8,33 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 12) {
             header
 
-            Text(model.discoveryStatus)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            IDESectionView(
-                sessions: model.ideSessions,
-                status: model.ideBridgeStatus,
-                commandStatuses: model.ideCommandStatuses,
-                onRefresh: model.refreshIDESessions,
-                onCommand: { command, target in
-                    model.runIDECommand(command, on: target)
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: model.hasCheckedIDEBridge
+                      ? (model.ideBridgeInstalled ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                      : "circle.dotted")
+                    .foregroundStyle(model.hasCheckedIDEBridge
+                                     ? (model.ideBridgeInstalled ? Color.green : Color.yellow)
+                                     : Color.secondary)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(model.hasCheckedIDEBridge
+                         ? (model.ideBridgeInstalled ? "IDE bridge installed" : "IDE bridge not installed")
+                         : "Checking IDE bridge installation…")
+                        .foregroundStyle(.primary)
+                    Text(model.ideBridgeStatus)
+                        .foregroundStyle(.secondary)
+                    if model.hasCheckedIDEBridge && !model.ideBridgeInstalled {
+                        Text("For existing desktop/web runs, use --vmservice-out-file or launch from here.")
+                            .foregroundStyle(.secondary)
+                    }
                 }
-            )
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .font(.caption)
 
+            Divider()
             sessionSection
 
-            if model.launchForm.isPresented {
-                Divider()
-                LaunchFormView(
-                    form: model.launchForm,
-                    devices: model.devices,
-                    onRun: model.launch
-                )
-            } else if !model.sessions.isEmpty {
-                Divider()
-            }
-
+            Divider()
             SettingsView(settings: model.settings)
         }
         .padding(14)
@@ -49,7 +47,10 @@ struct ContentView: View {
             Text("Mustel")
                 .font(.title3.weight(.semibold))
             Spacer()
-            Button(action: model.refreshDiscovery) {
+            Button {
+                model.refreshDiscovery()
+                model.refreshIDESessions()
+            } label: {
                 if model.isDiscovering {
                     HStack(spacing: 6) {
                         ProgressView()
@@ -74,8 +75,8 @@ struct ContentView: View {
                 }
             }
             .disabled(model.isDiscovering)
-            .help("Discover running Flutter apps")
-            .glassButtonStyleIfAvailable()
+            .help("Refresh Flutter runs and IDE sessions")
+            .squareIconButtonStyle(isExpanded: model.isDiscovering)
             Button {
                 model.launchForm.toggle()
             } label: {
@@ -83,27 +84,54 @@ struct ContentView: View {
                     .frame(width: 16, height: 16)
             }
             .help(model.launchForm.isPresented ? "Cancel launch" : "Launch a Flutter project")
-            .glassButtonStyleIfAvailable()
+            .squareIconButtonStyle()
+            .popover(
+                isPresented: Binding(
+                    get: { model.launchForm.isPresented },
+                    set: { presented in
+                        if model.launchForm.isPresented != presented {
+                            model.launchForm.toggle()
+                        }
+                    }
+                ),
+                arrowEdge: .top
+            ) {
+                LaunchFormView(
+                    form: model.launchForm,
+                    devices: model.devices,
+                    onRun: model.launch
+                )
+                .padding(14)
+                .frame(width: 320)
+            }
         }
         .animation(.easeInOut(duration: 0.2), value: model.isDiscovering)
     }
 
-    @ViewBuilder
     private var sessionSection: some View {
-        if model.sessions.count == 1, let session = model.sessions.first {
-            SessionRow(
-                session: session,
-                onReconnect: { model.reconnect(session) },
-                onStop: { model.stop(session) },
-                onRemove: { model.remove(session) }
-            )
-            .frame(maxWidth: .infinity, alignment: .leading)
-        } else if model.sessions.count > 1 {
+        VStack(alignment: .leading, spacing: 8) {
             ScrollViewIfNeeded(maxHeight: 300) {
-                VStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 8) {
+                    sessionTitle("IDE SESSIONS")
+                    if model.ideSessions.isEmpty {
+                        emptySessions("No IDE sessions")
+                    }
+                    ForEach(model.ideSessions) { target in
+                        IDESessionRow(
+                            target: target,
+                            status: model.ideCommandStatuses[target.id],
+                            onHotReload: { model.runIDECommand(.hotReload, on: target) },
+                            onHotRestart: { model.runIDECommand(.hotRestart, on: target) }
+                        )
+                    }
+                    if !model.sessions.isEmpty {
+                        sessionTitle("OTHER SESSIONS")
+                    }
                     ForEach(model.sessions) { session in
                         SessionRow(
                             session: session,
+                            platformHint: model.devices.first(where: { $0.id == session.target.deviceID })?
+                                .targetPlatform ?? "\(session.target.name) \(session.target.deviceID)",
                             onReconnect: { model.reconnect(session) },
                             onStop: { model.stop(session) },
                             onRemove: { model.remove(session) }
@@ -111,8 +139,22 @@ struct ContentView: View {
                     }
                 }
             }
-        } else if !model.launchForm.isPresented {
-            DiscoveryBanner(bridgeInstalled: model.ideBridgeInstalled)
+            Text(model.discoveryStatus)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    private func sessionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+    }
+
+    private func emptySessions(_ message: String) -> some View {
+        Text(message)
+            .font(.caption)
+            .foregroundStyle(.secondary)
     }
 }

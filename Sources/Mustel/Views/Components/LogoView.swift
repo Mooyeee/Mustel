@@ -8,7 +8,7 @@ struct LogoView: View {
             .renderingMode(.template)
             .resizable()
             .scaledToFit()
-            .frame(width: 28, height: 16)
+            .frame(width: 35, height: 20)
             .accessibilityHidden(true)
     }
 }

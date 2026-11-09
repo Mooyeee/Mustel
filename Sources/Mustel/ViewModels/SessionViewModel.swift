@@ -12,6 +12,7 @@ final class SessionViewModel: Identifiable {
     private(set) var isRunning = false
     private(set) var diagnostics: [String] = []
     private(set) var commandPhase: CommandPhase = .idle
+    private(set) var commandCompletedAt: Date?
 
     enum CommandPhase: Equatable {
         case idle
@@ -54,9 +55,28 @@ final class SessionViewModel: Identifiable {
         return false
     }
 
+    var commandStatus: VSCodeCommandStatus? {
+        guard isReady else { return nil }
+        switch commandPhase {
+        case let .running(command):
+            return VSCodeCommandStatus(command: command, phase: .requested)
+        case let .completed(command):
+            guard activity == "\(command.label) complete", let commandCompletedAt else { return nil }
+            return VSCodeCommandStatus(command: command, phase: .completed, completedAt: commandCompletedAt)
+        case let .failed(command):
+            let prefix = "\(command.label) failed: "
+            let message = activity ?? "Unknown error"
+            let detail = message.hasPrefix(prefix) ? String(message.dropFirst(prefix.count)) : message
+            return VSCodeCommandStatus(command: command, phase: .failed(detail))
+        case .idle:
+            return nil
+        }
+    }
+
     func connect() {
         pendingRequests.removeAll()
         commandPhase = .idle
+        commandCompletedAt = nil
         do {
             try service.start()
             isRunning = true
@@ -73,6 +93,7 @@ final class SessionViewModel: Identifiable {
         activity = nil
         isRunning = false
         commandPhase = .idle
+        commandCompletedAt = nil
         pendingRequests.removeAll()
         service.stop()
     }
@@ -94,6 +115,7 @@ final class SessionViewModel: Identifiable {
         let requestID = nextRequestID
         nextRequestID += 1
         let command: VSCodeCommand = full ? .hotRestart : .hotReload
+        commandCompletedAt = nil
         pendingRequests[String(requestID)] = command
         do {
             try service.send([
@@ -139,6 +161,9 @@ final class SessionViewModel: Identifiable {
                     activity = nil
                 }
             case "app.stop":
+                commandPhase = .idle
+                commandCompletedAt = nil
+                pendingRequests.removeAll()
                 if let error {
                     state = .failed("Attach failed: \(brief(error))")
                     activity = nil
@@ -149,7 +174,6 @@ final class SessionViewModel: Identifiable {
                 } else {
                     state = .stopped("Flutter app stopped")
                     activity = nil
-                    commandPhase = .idle
                 }
             default:
                 break
@@ -170,6 +194,7 @@ final class SessionViewModel: Identifiable {
                 appendDiagnostic("\(command.label) failed: \(error)")
             } else {
                 commandPhase = .completed(command)
+                commandCompletedAt = Date()
                 activity = "\(command.label) complete"
             }
         }
@@ -178,6 +203,7 @@ final class SessionViewModel: Identifiable {
     private func handleProcessExit(code: Int32) {
         isRunning = false
         commandPhase = .idle
+        commandCompletedAt = nil
         guard !wasStoppedByUser else { return }
         let processName = target.mode == .run ? "Flutter run" : "Flutter attach"
         state = .stopped(lastErrorLine ?? "\(processName) exited (code \(code))")
