@@ -10,10 +10,10 @@ final class SettingsViewModel {
         }
     }
 
-    var discoveryInterval: Int {
+    var discoveryInterval: DiscoveryInterval {
         didSet {
             guard discoveryInterval != oldValue else { return }
-            store.discoveryInterval = discoveryInterval
+            store.discoveryInterval = discoveryInterval.rawValue
             onDiscoveryIntervalChanged?()
         }
     }
@@ -35,8 +35,6 @@ final class SettingsViewModel {
     @ObservationIgnored var onDiscoveryIntervalChanged: (() -> Void)?
     @ObservationIgnored var onAlwaysAnimateLogoChanged: ((Bool) -> Void)?
 
-    static let discoveryIntervalOptions = [5, 10, 30, 60, 300]
-
     init(
         store: SettingsStore = SettingsStore(),
         launchAtLogin: LaunchAtLoginControlling = LaunchAtLoginService()
@@ -44,25 +42,13 @@ final class SettingsViewModel {
         self.store = store
         self.launchAtLogin = launchAtLogin
         flutterExecutable = store.flutterExecutable ?? FlutterExecutableLocator.resolve("flutter")
-        let storedInterval = store.discoveryInterval ?? 0
-        discoveryInterval = Self.discoveryIntervalOptions.contains(storedInterval) ? storedInterval : 5
+        discoveryInterval = store.discoveryInterval.flatMap(DiscoveryInterval.init(rawValue:)) ?? .default
         alwaysAnimateLogo = store.alwaysAnimateLogo
         refreshLaunchAtLoginState()
     }
 
     var canConfigureLaunchAtLogin: Bool {
         launchAtLogin.canConfigure
-    }
-
-    static func discoveryIntervalLabel(for interval: Int) -> String {
-        switch interval {
-        case 60:
-            return "Every minute"
-        case 300:
-            return "Every 5 minutes"
-        default:
-            return "Every \(interval) seconds"
-        }
     }
 
     func setLaunchAtLogin(_ enabled: Bool) {
