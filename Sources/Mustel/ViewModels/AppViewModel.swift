@@ -222,8 +222,10 @@ final class AppViewModel {
 
     private func scheduleDiscoveryTimer() {
         discoveryTimer?.invalidate()
+        discoveryTimer = nil
+        guard let interval = settings.discoveryInterval.timeInterval else { return }
         discoveryTimer = Timer.scheduledTimer(
-            withTimeInterval: TimeInterval(settings.discoveryInterval),
+            withTimeInterval: interval,
             repeats: true
         ) { [weak self] _ in
             Task { @MainActor in self?.refreshDiscovery() }
