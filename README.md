@@ -8,10 +8,21 @@
 
 <p align="center">
   <a href="https://github.com/Mooyeee/mustel/releases/latest"><img src="https://img.shields.io/github/v/release/Mooyeee/mustel?display_name=tag&sort=semver" alt="Latest release"></a>
+  <a href="https://github.com/Mooyeee/mustel/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/Mooyeee/mustel/tests.yml?branch=main&label=tests" alt="Tests"></a>
+  <a href="https://github.com/Mooyeee/mustel/stargazers"><img src="https://img.shields.io/github/stars/Mooyeee/mustel?style=flat" alt="GitHub stars"></a>
+  <a href="https://github.com/Mooyeee/mustel/releases"><img src="https://img.shields.io/github/downloads/Mooyeee/mustel/total" alt="Release downloads"></a>
+  <a href="https://github.com/Mooyeee/mustel/commits/main"><img src="https://img.shields.io/github/last-commit/Mooyeee/mustel/main" alt="Last commit"></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
   <img src="https://img.shields.io/badge/Flutter-hot%20reload-02569B?logo=flutter&logoColor=white" alt="Flutter hot reload">
+  <img src="https://img.shields.io/badge/Flutter-hot%20restart-02569B?logo=flutter&logoColor=white" alt="Flutter hot restart">
   <img src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white" alt="Swift 5.9">
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Java-ED8B00?logo=openjdk&logoColor=white" alt="Java">
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/Mooyeee/mustel" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs welcome">
 </p>
 
 Mustel is a macOS menu-bar app that puts hot reload and hot restart within reach while you work. It can discover supported Flutter runs, control Flutter sessions already running in VS Code, IntelliJ IDEA, or Android Studio, or launch a Flutter project itself. Its goal is to make the quick feedback loop easy to reach without switching back to a terminal or interrupting your current workflow.
@@ -90,7 +101,7 @@ The app is locally ad-hoc signed and **not notarized**. This setup is intended f
 
 ## Install the VS Code bridge
 
-The VS Code bridge is a small extension that lets Mustel trigger hot reload and hot restart on Dart/Flutter debug sessions running in VS Code.
+The VS Code bridge is a small extension, written in TypeScript, that lets Mustel trigger hot reload and hot restart on Dart/Flutter debug sessions running in VS Code.
 
 ### From a release (recommended)
 
@@ -123,7 +134,7 @@ Start a Dart/Flutter debug session after installing the bridge. It appears in Mu
 
 ## Install the IntelliJ bridge
 
-The IntelliJ bridge is a separate plugin for IntelliJ IDEA and Android Studio.
+The IntelliJ bridge is a separate Java plugin for IntelliJ IDEA and Android Studio, built with Gradle.
 
 ### From a release (recommended)
 
