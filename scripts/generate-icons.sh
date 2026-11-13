@@ -52,6 +52,7 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" vie
 output_path.write_text(svg)
 PY
 rsvg-convert -w 256 -h 256 "$PADDED_APP_SVG" -o "$VSCODE_ICON"
+cp "$VSCODE_ICON" "$PROJECT_ROOT/Resources/Mustel.png"
 rsvg-convert -w 1024 -h 1024 "$PADDED_APP_SVG" -o "$ICONSET/icon_512x512@2x.png"
 
 for size in 16 32 128 256 512; do

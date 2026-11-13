@@ -1,13 +1,28 @@
-# Mustel
+<p align="center">
+  <img src="./Resources/Mustel.png" width="128" alt="Mustel app icon">
+</p>
 
-**A little ferret for your Flutter hot reloads.**
+<h1 align="center">Mustel</h1>
+
+<p align="center"><strong>A little ferret for your Flutter hot reloads.</strong></p>
+
+<p align="center">
+  <a href="https://github.com/Mooyeee/mustel/releases/latest"><img src="https://img.shields.io/github/v/release/Mooyeee/mustel?display_name=tag&sort=semver" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Flutter-hot%20reload-02569B?logo=flutter&logoColor=white" alt="Flutter hot reload">
+  <img src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white" alt="Swift 5.9">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
+</p>
 
 Mustel is a macOS menu-bar app that puts hot reload and hot restart within reach while you work. It can discover supported Flutter runs, control Flutter sessions already running in VS Code, IntelliJ IDEA, or Android Studio, or launch a Flutter project itself. Its goal is to make the quick feedback loop easy to reach without switching back to a terminal or interrupting your current workflow.
 
 The name comes from *Mustela*, the genus that includes ferrets and weasels: curious little creatures that like to get into things. In the same spirit, Mustel gets its paws on Flutter's reload controls.
 
+> **In a hurry?** Install the app with `./scripts/install-app.sh`, then install the VS Code bridge or the IntelliJ bridge from the latest [GitHub release](https://github.com/Mooyeee/mustel/releases/latest). Both bridges can be installed manually from the IDE without building anything.
+
 ## Contents
 
+- [Quick start](#quick-start)
 - [What it does](#what-it-does)
 - [Requirements](#requirements)
 - [Install the macOS app](#install-the-macos-app)
@@ -19,6 +34,14 @@ The name comes from *Mustela*, the genus that includes ferrets and weasels: curi
 - [Development](#development)
 - [Known limitations](#known-limitations)
 - [License](#license)
+
+## Quick start
+
+1. **Install the app.** Build and install Mustel from source with [`./scripts/install-app.sh`](#install-the-macos-app).
+2. **Install an IDE bridge.** Download the `.vsix` or IntelliJ plugin `.zip` from the [latest release](https://github.com/Mooyeee/mustel/releases/latest) and install it from your IDE. You do not need to build the bridges yourself.
+3. **Start a Flutter run.** Use `flutter run` in a terminal or start a debug session in your IDE. The session appears in Mustel's menu-bar popover, ready for hot reload and hot restart.
+
+Mustel can update itself and tell you when a newer bridge is available from **Settings → UPDATES**.
 
 ## What it does
 
@@ -42,6 +65,17 @@ The name comes from *Mustela*, the genus that includes ferrets and weasels: curi
 
 ## Install the macOS app
 
+### From a release
+
+1. Open the [latest Mustel release](https://github.com/Mooyeee/mustel/releases/latest).
+2. Download and unzip `Mustel.zip`.
+3. Move `Mustel.app` to `~/Applications` (or `/Applications`).
+4. Open Mustel from Applications or Spotlight.
+
+The app is ad-hoc signed and **not notarized**, so macOS may ask you to allow it under **System Settings → Privacy & Security**.
+
+### From source
+
 Clone the repository, then from its directory run:
 
 ```sh
@@ -56,7 +90,25 @@ The app is locally ad-hoc signed and **not notarized**. This setup is intended f
 
 ## Install the VS Code bridge
 
-The bridge is a separate extension. Build and package it from the repository:
+The VS Code bridge is a small extension that lets Mustel trigger hot reload and hot restart on Dart/Flutter debug sessions running in VS Code.
+
+### From a release (recommended)
+
+1. Open the [latest Mustel release](https://github.com/Mooyeee/mustel/releases/latest).
+2. Download the VS Code asset named `mustel-vscode-<version>.vsix` (for example `mustel-vscode-0.1.1.vsix`).
+3. In VS Code open **Extensions** (`⇧⌘X`), click the **…** menu at the top of the Extensions view, and choose **Install from VSIX…**.
+4. Select the downloaded file.
+5. Reload VS Code with **Developer: Reload Window** from the Command Palette.
+
+From a terminal you can also install it with:
+
+```sh
+code --install-extension /path/to/mustel-vscode-<version>.vsix
+```
+
+Verify it in **Extensions → Installed** as **Mustel Bridge**. The extension requires the [Dart extension](https://marketplace.visualstudio.com/items?itemName=Dart-Code.dart-code) to be installed and enabled.
+
+### From source
 
 ```sh
 cd vscode-extension
@@ -65,26 +117,35 @@ npm run compile
 npx @vscode/vsce package
 ```
 
-Use a current Node.js release for VSIX packaging. Install the generated `mustel-vscode-0.1.1.vsix` in VS Code with **Extensions: Install from VSIX...**, or from a terminal:
+Use a current Node.js release for VSIX packaging. The generated `mustel-vscode-<version>.vsix` is in `vscode-extension/`.
 
-```sh
-code --install-extension mustel-vscode-0.1.1.vsix
-```
-
-Reload the VS Code window if it was already open. Start a Dart/Flutter debug session; it will appear in Mustel's **IDE sessions** section with its own hot reload and hot restart controls. The extension requires the Dart extension to be installed and enabled.
+Start a Dart/Flutter debug session after installing the bridge. It appears in Mustel's **IDE sessions** section with its own hot reload and hot restart controls.
 
 ## Install the IntelliJ bridge
 
-The IntelliJ bridge is a separate plugin for IntelliJ IDEA and Android Studio. Build it from the repository:
+The IntelliJ bridge is a separate plugin for IntelliJ IDEA and Android Studio.
+
+### From a release (recommended)
+
+1. Open the [latest Mustel release](https://github.com/Mooyeee/mustel/releases/latest).
+2. Download the asset named `mustel-intellij-<version>.zip` (for example `mustel-intellij-0.1.1.zip`).
+3. In IntelliJ IDEA or Android Studio open **Settings** (`⌘,`) → **Plugins**.
+4. Click the gear icon next to **Installed** and choose **Install Plugin from Disk…**.
+5. Select the downloaded `.zip` and confirm.
+6. Restart the IDE when prompted.
+
+Verify it under **Settings → Plugins → Installed** as **Mustel Bridge**. The plugin requires the Flutter and Dart plugins, and targets IntelliJ Platform 2023.1 or later.
+
+### From source
 
 ```sh
 cd intellij-plugin
 ./gradlew buildPlugin
 ```
 
-Install the generated `build/distributions/mustel-intellij-0.1.1.zip` with **Settings → Plugins → Install Plugin from Disk...**, then restart the IDE. Start a Flutter run configuration; it will appear in Mustel's **IDE sessions** section with hot reload and hot restart controls.
+Install the generated `build/distributions/mustel-intellij-<version>.zip` with **Settings → Plugins → Install Plugin from Disk…**, then restart the IDE. Start a Flutter run configuration; it appears in Mustel's **IDE sessions** section with hot reload and hot restart controls.
 
-The plugin targets IntelliJ Platform 2023.1 or later and requires the Flutter and Dart plugins. To build against an already installed IDE instead of downloading a platform, pass the local paths explicitly:
+To build against an already installed IDE instead of downloading a platform, pass the local paths explicitly:
 
 ```sh
 JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew buildPlugin \
@@ -143,6 +204,7 @@ Mustel contacts the public GitHub API (`api.github.com`) when it checks for upda
 - **Attach reports that `.dart_tool/package_graph.json` is missing:** run `flutter pub get` in the project directory, then reconnect.
 - **VS Code sessions do not appear:** confirm the Dart extension and Mustel Bridge are enabled, start a Dart/Flutter debug session, and reload VS Code after installing the VSIX.
 - **IntelliJ sessions do not appear:** confirm the Flutter and Dart plugins are enabled and the Mustel Bridge plugin is installed, then start a Flutter run configuration. Restart the IDE after installing the plugin ZIP.
+- **An IDE bridge reports an error after an update:** reinstall the matching `.vsix` or plugin `.zip` from the latest release and restart the IDE. Mustel can detect and link to bridge updates, but installing them is always done from VS Code or IntelliJ/Android Studio.
 - **Launch at login is unavailable:** install and open `~/Applications/Mustel.app`; it is not available when running with `swift run`.
 
 ## Development
