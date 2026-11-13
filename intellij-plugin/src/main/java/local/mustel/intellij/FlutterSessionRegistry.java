@@ -1,16 +1,19 @@
 package local.mustel.intellij;
 
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.execution.ui.RunContentManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
-import io.flutter.pub.PubRoot;
 import io.flutter.run.daemon.DaemonApi;
 import io.flutter.run.daemon.FlutterApp;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -124,19 +127,55 @@ public final class FlutterSessionRegistry implements SessionRegistry {
      * so prefer the app's own pub root.
      */
     private static String projectPath(Project project, FlutterApp app) {
-        Module module = app.getModule();
-        String fallback = null;
-        for (PubRoot root : app.getPubRoots()) {
-            if (!root.declaresFlutter()) {
-                continue;
+        GeneralCommandLine command = app.getCommand();
+        if (command != null) {
+            File workDirectory = command.getWorkDirectory();
+            String workPath = workDirectory == null ? null : workDirectory.getPath();
+            String target = targetPath(command.getParametersList().getList());
+            if (workPath != null && target != null) {
+                Path targetPath = Paths.get(workPath).resolve(target).normalize();
+                String root = pubspecRoot(targetPath);
+                if (root != null) {
+                    return root;
+                }
             }
-            if (module != null && root.getModule(project) == module) {
-                return root.getPath();
-            }
-            if (fallback == null) {
-                fallback = root.getPath();
+            if (workPath != null) {
+                String root = pubspecRoot(Paths.get(workPath));
+                if (root != null) {
+                    return root;
+                }
             }
         }
-        return fallback == null ? workspace(project) : fallback;
+        return workspace(project);
+    }
+
+    private static String targetPath(List<String> arguments) {
+        for (int index = 0; index < arguments.size(); index++) {
+            String argument = arguments.get(index);
+            if ("-t".equals(argument) || "--target".equals(argument)) {
+                int next = index + 1;
+                if (next < arguments.size()) {
+                    return arguments.get(next);
+                }
+            }
+            if (argument.startsWith("--target=")) {
+                return argument.substring("--target=".length());
+            }
+            if (argument.startsWith("-t") && argument.length() > 2) {
+                return argument.substring(2);
+            }
+        }
+        return null;
+    }
+
+    private static String pubspecRoot(Path start) {
+        Path directory = Files.isDirectory(start) ? start : start.getParent();
+        while (directory != null) {
+            if (Files.isRegularFile(directory.resolve("pubspec.yaml"))) {
+                return directory.toString();
+            }
+            directory = directory.getParent();
+        }
+        return null;
     }
 }
