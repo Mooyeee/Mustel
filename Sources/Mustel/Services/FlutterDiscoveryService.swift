@@ -77,7 +77,12 @@ struct FlutterDiscoveryService: FlutterDiscovering {
                 skippedRuns += 1
                 continue
             }
-            guard FileManager.default.fileExists(atPath: "\(projectPath)/pubspec.yaml") else {
+            let customTargetPath = Self.targetPath(in: process.command)
+            let appPath = FlutterProjectLocator.resolveAppPath(
+                projectPath,
+                targetPath: customTargetPath
+            ) ?? projectPath
+            guard FileManager.default.fileExists(atPath: "\(appPath)/pubspec.yaml") else {
                 skippedRuns += 1
                 continue
             }
@@ -89,17 +94,17 @@ struct FlutterDiscoveryService: FlutterDiscovering {
                 continue
             }
 
-            let customTargetPath = Self.targetPath(in: process.command)
-            let targetID = "\(projectPath)|\(selectedDevice.id)|\(customTargetPath ?? "lib/main.dart")"
+            let targetID = "\(appPath)|\(selectedDevice.id)|\(customTargetPath ?? "lib/main.dart")"
                 + "|\(Self.serviceInfoPath(in: process.command) ?? "")"
             targetsByID[targetID] = FlutterTarget(
                 id: targetID,
-                name: "\(URL(fileURLWithPath: projectPath).lastPathComponent) · \(selectedDevice.name)",
+                name: "\(URL(fileURLWithPath: appPath).lastPathComponent) · \(selectedDevice.name)",
                 projectPath: projectPath,
                 deviceID: selectedDevice.id,
                 targetPath: customTargetPath,
                 vmServiceURL: serviceURL,
-                mode: canDiscoverByAttach ? .attach : .attachURL
+                mode: canDiscoverByAttach ? .attach : .attachURL,
+                appPath: appPath
             )
         }
 

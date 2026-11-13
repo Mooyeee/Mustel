@@ -9,7 +9,7 @@
 	<key>CFBundleIconFile</key>
 	<string>Mustel-0.1.6.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.ionutdanielfagadau.Mustel</string>
+	<string>com.mooyee.Mustel</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

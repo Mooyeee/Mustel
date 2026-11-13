@@ -6,6 +6,11 @@
   "description": "Control active Dart/Flutter debug sessions from the Mustel macOS menu bar.",
   "version": "0.1.0",
   "publisher": "local",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mooyeee/mustel.git"
+  },
+  "homepage": "https://github.com/Mooyeee/mustel#readme",
   "engines": {
     "vscode": "^1.85.0"
   },

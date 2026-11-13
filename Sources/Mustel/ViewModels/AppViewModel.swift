@@ -18,12 +18,14 @@ final class AppViewModel {
     }
     private(set) var ideBridgeStatus = "Connecting to the IDE bridge…"
     private(set) var ideBridgeInstalled = false
+    private(set) var ideBridgeVersions = IDEBridgeVersions()
     private(set) var hasCheckedIDEBridge = false
     private(set) var ideCommandStatuses: [String: VSCodeCommandStatus] = [:]
 
     let settings: SettingsViewModel
     let launchForm: LaunchFormViewModel
     let logoAnimator: LogoAnimator
+    let updates: UpdateViewModel
 
     @ObservationIgnored private let discoveryService: FlutterDiscovering
     @ObservationIgnored private let bridge: VSCodeBridging
@@ -41,6 +43,8 @@ final class AppViewModel {
         ideBridgeProbe: IDEBridgeProbing = IDEBridgeProbe(),
         launchAtLogin: LaunchAtLoginControlling = LaunchAtLoginService(),
         launchForm: LaunchFormViewModel? = nil,
+        updateService: UpdateServicing = GitHubUpdateService(),
+        updateInstaller: UpdateInstalling = UpdateInstaller(),
         makeSession: @escaping SessionFactory = { target, executable in
             SessionViewModel(target: target, flutterExecutable: executable)
         }
@@ -53,12 +57,17 @@ final class AppViewModel {
         self.logoAnimator = logoAnimator
         self.settings = SettingsViewModel(store: settingsStore, launchAtLogin: launchAtLogin)
         self.launchForm = launchForm ?? LaunchFormViewModel()
+        self.updates = UpdateViewModel(service: updateService, installer: updateInstaller)
         settings.onDiscoveryIntervalChanged = { [weak self] in
             self?.scheduleDiscoveryTimer()
         }
         settings.onAlwaysAnimateLogoChanged = { [weak logoAnimator] enabled in
             logoAnimator?.setAlwaysAnimate(enabled)
         }
+        settings.onAnimationsEnabledChanged = { [weak logoAnimator] enabled in
+            logoAnimator?.setAnimationsEnabled(enabled)
+        }
+        logoAnimator.setAnimationsEnabled(settings.animationsEnabled)
         logoAnimator.setAlwaysAnimate(settings.alwaysAnimateLogo)
     }
 
@@ -152,13 +161,15 @@ final class AppViewModel {
                 return VSCodeBridgeSnapshot(
                     targets: discovered.targets,
                     status: discovered.status,
-                    bridgeInstalled: probe.isInstalled()
+                    bridgeVersions: probe.installedVersions()
                 )
             }.value
             isRefreshingIDESessions = false
             ideSessions = result.targets
             ideBridgeStatus = result.status
-            ideBridgeInstalled = result.bridgeInstalled
+            ideBridgeVersions = result.bridgeVersions
+            ideBridgeInstalled = result.bridgeVersions.isInstalled
+            updates.updateInstalledIDEVersions(result.bridgeVersions)
             hasCheckedIDEBridge = true
             let activeIDs = Set(result.targets.map(\.id))
             ideCommandStatuses = ideCommandStatuses.filter { activeIDs.contains($0.key) }

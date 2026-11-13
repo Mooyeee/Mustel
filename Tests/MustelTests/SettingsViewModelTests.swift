@@ -93,6 +93,60 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertEqual(notifications, [true])
     }
 
+    func testPersistsAnimationsEnabled() {
+        let store = SettingsStore(defaults: defaults)
+        let settings = SettingsViewModel(store: store, launchAtLogin: FakeLaunchAtLogin())
+        var notifications: [Bool] = []
+        settings.onAnimationsEnabledChanged = { notifications.append($0) }
+
+        XCTAssertTrue(settings.animationsEnabled)
+        settings.animationsEnabled = false
+
+        XCTAssertFalse(store.animationsEnabled)
+        XCTAssertEqual(notifications, [false])
+
+        settings.animationsEnabled = false
+        XCTAssertEqual(notifications, [false])
+    }
+
+    func testLoadsStoredAnimationsEnabled() {
+        let store = SettingsStore(defaults: defaults)
+        store.animationsEnabled = false
+
+        let settings = SettingsViewModel(store: store, launchAtLogin: FakeLaunchAtLogin())
+
+        XCTAssertFalse(settings.animationsEnabled)
+    }
+
+    func testMigratesLegacySettings() {
+        let legacySuite = "MustelTests-Legacy-\(UUID().uuidString)"
+        let legacy = UserDefaults(suiteName: legacySuite)!
+        defer { legacy.removePersistentDomain(forName: legacySuite) }
+        legacy.set("/legacy/flutter", forKey: "flutterExecutable")
+        legacy.set(30, forKey: "discoveryInterval")
+        legacy.set(true, forKey: "alwaysAnimateLogo")
+        legacy.set(false, forKey: "animationsEnabled")
+
+        let store = SettingsStore(defaults: defaults, legacyDefaults: legacy)
+
+        XCTAssertEqual(store.flutterExecutable, "/legacy/flutter")
+        XCTAssertEqual(store.discoveryInterval, 30)
+        XCTAssertTrue(store.alwaysAnimateLogo)
+        XCTAssertFalse(store.animationsEnabled)
+    }
+
+    func testLoadedValuesTakePrecedenceOverLegacyValues() {
+        let legacySuite = "MustelTests-Legacy-\(UUID().uuidString)"
+        let legacy = UserDefaults(suiteName: legacySuite)!
+        defer { legacy.removePersistentDomain(forName: legacySuite) }
+        legacy.set("/legacy/flutter", forKey: "flutterExecutable")
+        defaults.set("/new/flutter", forKey: "flutterExecutable")
+
+        let store = SettingsStore(defaults: defaults, legacyDefaults: legacy)
+
+        XCTAssertEqual(store.flutterExecutable, "/new/flutter")
+    }
+
     func testLoadsStoredAlwaysAnimateLogo() {
         let store = SettingsStore(defaults: defaults)
         store.alwaysAnimateLogo = true

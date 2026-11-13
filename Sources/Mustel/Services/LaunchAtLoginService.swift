@@ -11,7 +11,7 @@ protocol LaunchAtLoginControlling {
 struct LaunchAtLoginService: LaunchAtLoginControlling {
     var canConfigure: Bool {
         Bundle.main.bundleURL.pathExtension == "app"
-            && Bundle.main.bundleIdentifier == "com.ionutdanielfagadau.Mustel"
+            && Bundle.main.bundleIdentifier == AppIdentity.bundleIdentifier
     }
 
     var isEnabled: Bool {

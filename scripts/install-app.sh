@@ -17,7 +17,7 @@ cp "$PROJECT_ROOT/Resources/Info.plist" "$BUILD_APP/Contents/Info.plist"
 cp "$PROJECT_ROOT/Resources/Mustel-0.1.6.icns" "$BUILD_APP/Contents/Resources/Mustel-0.1.6.icns"
 cp "$PROJECT_ROOT/Sources/Mustel/MustelMenuBar.png" "$BUILD_APP/Contents/Resources/MustelMenuBar.png"
 cp -R "$BIN_DIRECTORY/Mustel_Mustel.bundle" "$BUILD_APP/Contents/Resources/"
-codesign --force --sign - --identifier com.ionutdanielfagadau.Mustel "$BUILD_APP"
+codesign --force --sign - --identifier com.mooyee.Mustel "$BUILD_APP"
 ditto "$BUILD_APP" "$INSTALL_APP"
 codesign --verify --deep --strict "$INSTALL_APP"
 touch "$INSTALL_APP" "$INSTALL_APP/Contents/Info.plist"
@@ -25,8 +25,8 @@ touch "$INSTALL_APP" "$INSTALL_APP/Contents/Info.plist"
 mdimport -i "$INSTALL_APP"
 
 if FLUTTER_EXECUTABLE="$(command -v flutter)"; then
-    if ! defaults read com.ionutdanielfagadau.Mustel flutterExecutable >/dev/null 2>&1; then
-        defaults write com.ionutdanielfagadau.Mustel flutterExecutable -string "$FLUTTER_EXECUTABLE"
+    if ! defaults read com.mooyee.Mustel flutterExecutable >/dev/null 2>&1; then
+        defaults write com.mooyee.Mustel flutterExecutable -string "$FLUTTER_EXECUTABLE"
     fi
 fi
 

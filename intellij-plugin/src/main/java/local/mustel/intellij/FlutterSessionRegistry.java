@@ -4,8 +4,10 @@ import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.execution.ui.RunContentManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import io.flutter.pub.PubRoot;
 import io.flutter.run.daemon.DaemonApi;
 import io.flutter.run.daemon.FlutterApp;
 
@@ -19,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Finds running Flutter apps in the IDE and forwards reload/restart commands to them.
  */
 public final class FlutterSessionRegistry implements SessionRegistry {
-    public record SessionInfo(String id, String name, String workspace) {
+    public record SessionInfo(String id, String name, String workspace, String projectPath) {
     }
 
     @Override
@@ -34,7 +36,8 @@ public final class FlutterSessionRegistry implements SessionRegistry {
                     sessions.add(new SessionInfo(
                         idFor(project, app),
                         displayName(project, app),
-                        workspace(project)
+                        workspace(project),
+                        projectPath(project, app)
                     ));
                 }
             }
@@ -113,5 +116,27 @@ public final class FlutterSessionRegistry implements SessionRegistry {
     private static String workspace(Project project) {
         String path = project.getBasePath();
         return path == null ? "" : path;
+    }
+
+    /**
+     * Returns the Flutter app package for the run. The project base path is the
+     * folder opened in the IDE, which in a pub workspace can be the outer root,
+     * so prefer the app's own pub root.
+     */
+    private static String projectPath(Project project, FlutterApp app) {
+        Module module = app.getModule();
+        String fallback = null;
+        for (PubRoot root : app.getPubRoots()) {
+            if (!root.declaresFlutter()) {
+                continue;
+            }
+            if (module != null && root.getModule(project) == module) {
+                return root.getPath();
+            }
+            if (fallback == null) {
+                fallback = root.getPath();
+            }
+        }
+        return fallback == null ? workspace(project) : fallback;
     }
 }

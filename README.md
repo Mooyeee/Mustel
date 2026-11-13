@@ -23,6 +23,8 @@ The name comes from *Mustela*, the genus that includes ferrets and weasels: curi
 ## What it does
 
 - **Lives in the macOS menu bar.** Click the ferret to open Mustel; right-click it to quit. The ferret runs while Mustel scans for Flutter runs, or permanently if you enable **Always animate the logo** in Settings.
+- **Can stay still.** Turn off logo animations in Settings if you prefer a static menu-bar icon.
+- **Checks GitHub for updates.** Open Settings to see the installed version, check for a newer GitHub release, and install it directly from the app.
 - **Discovers existing mobile Flutter runs.** Mustel scans for supported Android and iOS runs and attaches to them automatically.
 - **Controls IDE debug sessions.** With the companion bridge installed, use hot reload and hot restart on active Flutter runs in VS Code, IntelliJ IDEA, or Android Studio. Mustel sends the request to the IDE; it does not start a competing `flutter attach` for those sessions.
 - **Launches Flutter projects.** Choose a project and device in Mustel to start and control a new `flutter run --machine` session, including macOS desktop and web targets.
@@ -63,10 +65,10 @@ npm run compile
 npx @vscode/vsce package
 ```
 
-Use a current Node.js release for VSIX packaging. Install the generated `local.mustel-vscode-0.1.0.vsix` in VS Code with **Extensions: Install from VSIX...**, or from a terminal:
+Use a current Node.js release for VSIX packaging. Install the generated `mustel-vscode-0.1.0.vsix` in VS Code with **Extensions: Install from VSIX...**, or from a terminal:
 
 ```sh
-code --install-extension local.mustel-vscode-0.1.0.vsix
+code --install-extension mustel-vscode-0.1.0.vsix
 ```
 
 Reload the VS Code window if it was already open. Start a Dart/Flutter debug session; it will appear in Mustel's **IDE sessions** section with its own hot reload and hot restart controls. The extension requires the Dart extension to be installed and enabled.
@@ -122,11 +124,17 @@ flutter run -d macos --vmservice-out-file=/tmp/my-app-vmservice.json
 
 Mustel reads the URL from that file and attaches to it. The file must contain the URL for the current run; stale URLs are ignored. Alternatively, launch the desktop or web project from Mustel.
 
+### Update Mustel
+
+Open Settings and expand the panel. Mustel shows the installed version and checks the latest GitHub release the first time you open Settings. Use **Update** when a newer version is available; Mustel downloads `Mustel.zip`, verifies the bundle identifier and code signature, replaces the app, and relaunches it. Update progress and errors appear in the same section, and installation details are written to `~/Library/Logs/Mustel/update.log`.
+
+The same section also checks the installed VS Code and IntelliJ bridge versions. When a release includes newer bridge assets, Mustel shows a download link; install the `.vsix` or plugin `.zip` through your IDE as usual. Updates to the app itself require running the installed `.app` bundle. Ad-hoc signed builds are supported, but macOS may still require you to allow the app in **System Settings → Privacy & Security** after an update.
+
 ## Privacy and local bridge
 
 The VS Code extension and IntelliJ plugin are local to your Mac. They communicate with the app through per-user files and Unix domain sockets; neither bridge exposes a network listener or requires a cloud service. The bridge directory is restricted to the current user, socket files are owner-only, and Mustel validates the socket paths it reads. The bridges accept requests only for active Flutter runs owned by the IDE process and support only hot reload and hot restart commands.
 
-Mustel invokes the Flutter executable you configure. Flutter itself may perform its normal network operations, for example when resolving packages or running a project; those are not relayed through Mustel's IDE bridge.
+Mustel contacts the public GitHub API (`api.github.com`) when it checks for updates. No project or session data is sent. Mustel invokes the Flutter executable you configure. Flutter itself may perform its normal network operations, for example when resolving packages or running a project; those are not relayed through Mustel's IDE bridge.
 
 ## Troubleshooting
 
@@ -157,6 +165,22 @@ Build the release app and install it with the same script used above:
 ```sh
 ./scripts/install-app.sh
 ```
+
+Package the installed app and both IDE bridges for a GitHub release:
+
+```sh
+./scripts/package-release.sh
+# or publish the release with the GitHub CLI:
+./scripts/package-release.sh --publish
+```
+
+The script writes these assets to `.build/releases/`:
+
+- `Mustel.zip`
+- `mustel-vscode-<version>.vsix`
+- `mustel-intellij-<version>.zip`
+
+Upload them to a GitHub release whose tag is the app version, for example `v0.1.7`. The in-app updater reads the latest release from `Mooyeee/mustel` and requires `Mustel.zip` (or another `.zip` containing `Mustel.app`). It also compares the installed VS Code and IntelliJ bridge versions with the `.vsix` and IntelliJ `.zip` assets and shows a download link in Settings when a newer bridge is available. Bump `CFBundleShortVersionString` and `CFBundleVersion` in [`Resources/Info.plist`](./Resources/Info.plist), and the versions in `vscode-extension/package.json` and `intellij-plugin/build.gradle.kts`, before packaging.
 
 Compile the VS Code extension:
 

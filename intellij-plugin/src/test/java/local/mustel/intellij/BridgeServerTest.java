@@ -80,7 +80,7 @@ public final class BridgeServerTest {
 
         @Override
         public List<FlutterSessionRegistry.SessionInfo> list() {
-            return List.of(new FlutterSessionRegistry.SessionInfo("session-1", "App", "/tmp/app"));
+            return List.of(new FlutterSessionRegistry.SessionInfo("session-1", "App", "/tmp/app", "/tmp/app"));
         }
 
         @Override

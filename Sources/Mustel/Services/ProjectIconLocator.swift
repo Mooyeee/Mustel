@@ -3,7 +3,8 @@ import Foundation
 enum ProjectIconLocator {
     static func locate(projectPath: String, platformHint: String) -> URL? {
         guard !projectPath.isEmpty else { return nil }
-        let project = URL(fileURLWithPath: projectPath, isDirectory: true)
+        let resolvedPath = FlutterProjectLocator.resolveAppPath(projectPath) ?? projectPath
+        let project = URL(fileURLWithPath: resolvedPath, isDirectory: true)
         if let icon = locateInProject(project, platformHint: platformHint) {
             return icon
         }

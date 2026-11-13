@@ -22,31 +22,28 @@ struct IDESessionRow: View {
         status?.command == .hotRestart && status?.phase == .completed
     }
 
+    private var projectPath: String {
+        FlutterProjectLocator.resolveAppPath(target.projectPath) ?? target.projectPath
+    }
+
     private var appName: String? {
-        guard !target.workspace.isEmpty else { return nil }
-        let pubspec = URL(fileURLWithPath: target.workspace).appendingPathComponent("pubspec.yaml")
-        if let contents = try? String(contentsOf: pubspec, encoding: .utf8) {
-            for line in contents.split(whereSeparator: \.isNewline) where line.hasPrefix("name:") {
-                let value = line.dropFirst(5)
-                    .trimmingCharacters(in: .whitespaces)
-                    .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
-                if !value.isEmpty { return value }
-            }
+        if let name = FlutterProjectLocator.appName(for: target.projectPath) {
+            return name
         }
-        let folder = URL(fileURLWithPath: target.workspace).lastPathComponent
+        let folder = URL(fileURLWithPath: projectPath).lastPathComponent
         return folder.isEmpty ? nil : folder
     }
 
     var body: some View {
         HStack(spacing: 8) {
-            ProjectIconView(projectPath: target.workspace, platformHint: target.name)
+            ProjectIconView(projectPath: projectPath, platformHint: target.name)
             VStack(alignment: .leading, spacing: 3) {
                 Text(appName.map { "\($0) - \(target.name)" } ?? target.name)
                     .font(.subheadline.weight(.medium))
                     .lineLimit(1)
-                Text(target.workspace.isEmpty
+                Text(projectPath.isEmpty
                      ? "Flutter run session"
-                     : URL(fileURLWithPath: target.workspace).path)
+                     : URL(fileURLWithPath: projectPath).path)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

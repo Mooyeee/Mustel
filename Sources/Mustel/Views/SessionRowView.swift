@@ -12,14 +12,14 @@ struct SessionRow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .center, spacing: 8) {
                 ProjectIconView(
-                    projectPath: session.target.projectPath,
+                    projectPath: session.target.appPath,
                     platformHint: platformHint
                 )
                 VStack(alignment: .leading, spacing: 3) {
                     Text(session.target.name)
                         .font(.subheadline.weight(.medium))
                         .lineLimit(1)
-                    Text(session.target.projectPath)
+                    Text(session.target.appPath)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)

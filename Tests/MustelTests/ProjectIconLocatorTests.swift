@@ -50,6 +50,27 @@ final class ProjectIconLocatorTests: XCTestCase {
         XCTAssertNil(ProjectIconLocator.locate(projectPath: "", platformHint: ""))
     }
 
+    func testFindsIconInUniquePubWorkspaceMember() throws {
+        let workspace = try makeTemporaryProject()
+        defer { try? FileManager.default.removeItem(at: workspace) }
+        try Data("""
+        name: my_workspace
+        workspace:
+          - apps/my_app
+        """.utf8).write(to: workspace.appendingPathComponent("pubspec.yaml"))
+        let app = workspace.appendingPathComponent("apps/my_app")
+        let icon = app.appendingPathComponent("web/icons/Icon-512.png")
+        try FileManager.default.createDirectory(at: icon.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("name: my_app\n".utf8).write(to: app.appendingPathComponent("pubspec.yaml"))
+        try Data().write(to: icon)
+
+        XCTAssertEqual(
+            ProjectIconLocator.locate(projectPath: workspace.path, platformHint: "Chrome")?
+                .resolvingSymlinksInPath(),
+            icon.resolvingSymlinksInPath()
+        )
+    }
+
     func testFindsUniqueAppInsideWorkspace() throws {
         let workspace = try makeTemporaryProject()
         defer { try? FileManager.default.removeItem(at: workspace) }

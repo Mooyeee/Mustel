@@ -95,6 +95,42 @@ final class FlutterDiscoveryServiceTests: XCTestCase {
         XCTAssertEqual(snapshot.unsupportedRuns, 1)
     }
 
+    func testResolvesPubWorkspaceAppFromTargetPath() throws {
+        let workspace = try makeTemporaryProject()
+        defer { try? FileManager.default.removeItem(at: workspace) }
+        try Data("""
+        name: my_workspace
+        workspace:
+          - apps/my_app
+        """.utf8).write(to: workspace.appendingPathComponent("pubspec.yaml"))
+        let app = workspace.appendingPathComponent("apps/my_app")
+        try FileManager.default.createDirectory(at: app, withIntermediateDirectories: true)
+        try Data("""
+        name: my_app
+        resolution: workspace
+        """.utf8).write(to: app.appendingPathComponent("pubspec.yaml"))
+
+        let serviceFile = workspace.appendingPathComponent("vmservice.json")
+        try Data(#"{"uri":"ws://127.0.0.1:1234/ws"}"#.utf8).write(to: serviceFile)
+
+        let start = processStartDateString(offset: -60)
+        let runner = FakeProcessRunner(outputs: [
+            "/usr/bin/env /custom/flutter devices --machine": #"[{"id":"macos","name":"macOS","targetPlatform":"darwin","isSupported":true}]"#,
+            "/bin/ps -axo pid=,command=": "456 /Users/me/flutter/bin/flutter run -d macos -t apps/my_app/lib/main.dart --vmservice-out-file=vmservice.json\n",
+            "/usr/sbin/lsof -a -p 456 -d cwd -Fn": "p456\nfcwd\nn\(workspace.path)\n",
+            "/bin/ps -o lstart= -p 456": start
+        ])
+        let snapshot = try FlutterDiscoveryService(processRunner: runner)
+            .discover(flutterExecutable: "/custom/flutter")
+
+        let target = try XCTUnwrap(snapshot.targets.first)
+        XCTAssertEqual(target.projectPath, workspace.path)
+        XCTAssertEqual(target.appPath, app.path)
+        XCTAssertEqual(target.targetPath, "apps/my_app/lib/main.dart")
+        XCTAssertEqual(target.name, "my_app · macOS")
+        XCTAssertEqual(target.vmServiceURL, "ws://127.0.0.1:1234/ws")
+    }
+
     func testParsesDeviceIDVariants() {
         XCTAssertEqual(FlutterDiscoveryService.deviceID(in: "flutter run -d emulator-5554"), "emulator-5554")
         XCTAssertEqual(FlutterDiscoveryService.deviceID(in: "flutter run --device-id emulator-5554"), "emulator-5554")

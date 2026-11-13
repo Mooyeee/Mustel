@@ -35,7 +35,8 @@ struct ContentView: View {
             sessionSection
 
             Divider()
-            SettingsView(settings: model.settings)
+            SettingsView(settings: model.settings, updates: model.updates)
+            Spacer(minLength: 0)
         }
         .padding(14)
         .frame(width: 380)
@@ -44,8 +45,13 @@ struct ContentView: View {
     private var header: some View {
         HStack {
             LogoView(animator: model.logoAnimator)
-            Text("Mustel")
-                .font(.title3.weight(.semibold))
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Mustel")
+                    .font(.title3.weight(.semibold))
+                Text(model.updates.currentVersionText)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
             Spacer()
             Button {
                 model.refreshDiscovery()

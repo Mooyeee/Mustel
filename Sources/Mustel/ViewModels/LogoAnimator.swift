@@ -13,6 +13,7 @@ final class LogoAnimator {
     @ObservationIgnored private var didAttemptLoad = false
     @ObservationIgnored private var isScanning = false
     @ObservationIgnored private var alwaysAnimate = false
+    @ObservationIgnored private var animationsEnabled = true
     @ObservationIgnored private var phase: Phase = .idle
     @ObservationIgnored private var frameIndex = 0
     @ObservationIgnored private var timer: Timer?
@@ -43,6 +44,16 @@ final class LogoAnimator {
         updateDesiredState()
     }
 
+    func setAnimationsEnabled(_ enabled: Bool) {
+        guard animationsEnabled != enabled else { return }
+        animationsEnabled = enabled
+        if enabled {
+            updateDesiredState()
+        } else {
+            stopImmediately()
+        }
+    }
+
     func stop() {
         timer?.invalidate()
         timer = nil
@@ -54,7 +65,18 @@ final class LogoAnimator {
     }
 
     private var desiredRunning: Bool {
-        isScanning || alwaysAnimate
+        animationsEnabled && (isScanning || alwaysAnimate)
+    }
+
+    private func stopImmediately() {
+        stopAfterTransitionIn = false
+        startAfterTransitionOut = false
+        phase = .idle
+        frameIndex = 0
+        if let idle = animations?.idle {
+            show(idle)
+        }
+        stopTimer()
     }
 
     private func updateDesiredState() {

@@ -60,14 +60,20 @@ final class LaunchFormViewModel {
         }
         let projectURL = URL(fileURLWithPath: projectPath, isDirectory: true)
         let customTarget = targetPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        let appPath = FlutterProjectLocator.resolveAppPath(
+            projectURL.path,
+            targetPath: customTarget.isEmpty ? nil : customTarget
+        ) ?? projectURL.path
+        let appURL = URL(fileURLWithPath: appPath, isDirectory: true)
         return FlutterTarget(
             id: "run:\(UUID().uuidString)",
-            name: "\(projectURL.lastPathComponent) · \(device.name)",
+            name: "\(appURL.lastPathComponent) · \(device.name)",
             projectPath: projectURL.path,
             deviceID: device.id,
             targetPath: customTarget.isEmpty ? nil : customTarget,
             vmServiceURL: nil,
-            mode: .run
+            mode: .run,
+            appPath: appURL.path
         )
     }
 }

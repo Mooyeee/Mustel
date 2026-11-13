@@ -74,12 +74,14 @@ struct VSCodeBridgeClient: VSCodeBridging {
                         continue
                     }
                     let workspace = session["workspace"] as? String ?? ""
+                    let projectPath = session["projectPath"] as? String
                     targets.append(VSCodeDebugTarget(
                         id: "\(descriptor.socketPath)|\(sessionID)",
                         sessionID: sessionID,
                         socketPath: descriptor.socketPath,
                         name: name,
-                        workspace: workspace
+                        workspace: workspace,
+                        projectPath: projectPath
                     ))
                 }
             } catch {
