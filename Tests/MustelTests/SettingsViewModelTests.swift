@@ -26,7 +26,7 @@ final class SettingsViewModelTests: XCTestCase {
         let settings = SettingsViewModel(store: store, launchAtLogin: FakeLaunchAtLogin())
 
         XCTAssertEqual(settings.flutterExecutable, "/custom/flutter")
-        XCTAssertEqual(settings.discoveryInterval, 30)
+        XCTAssertEqual(settings.discoveryInterval, .thirtySeconds)
     }
 
     func testInvalidStoredIntervalFallsBackToDefault() {
@@ -35,7 +35,7 @@ final class SettingsViewModelTests: XCTestCase {
 
         let settings = SettingsViewModel(store: store, launchAtLogin: FakeLaunchAtLogin())
 
-        XCTAssertEqual(settings.discoveryInterval, 5)
+        XCTAssertEqual(settings.discoveryInterval, .fiveSeconds)
     }
 
     func testPersistsValuesAndNotifiesOnIntervalChange() {
@@ -45,13 +45,13 @@ final class SettingsViewModelTests: XCTestCase {
         settings.onDiscoveryIntervalChanged = { notifications += 1 }
 
         settings.flutterExecutable = "/new/flutter"
-        settings.discoveryInterval = 60
+        settings.discoveryInterval = .oneMinute
 
         XCTAssertEqual(store.flutterExecutable, "/new/flutter")
         XCTAssertEqual(store.discoveryInterval, 60)
         XCTAssertEqual(notifications, 1)
 
-        settings.discoveryInterval = 60
+        settings.discoveryInterval = .oneMinute
         XCTAssertEqual(notifications, 1)
     }
 
@@ -157,8 +157,19 @@ final class SettingsViewModelTests: XCTestCase {
     }
 
     func testIntervalLabels() {
-        XCTAssertEqual(SettingsViewModel.discoveryIntervalLabel(for: 5), "Every 5 seconds")
-        XCTAssertEqual(SettingsViewModel.discoveryIntervalLabel(for: 60), "Every minute")
-        XCTAssertEqual(SettingsViewModel.discoveryIntervalLabel(for: 300), "Every 5 minutes")
+        XCTAssertEqual(DiscoveryInterval.fiveSeconds.label, "Every 5 seconds")
+        XCTAssertEqual(DiscoveryInterval.oneMinute.label, "Every minute")
+        XCTAssertEqual(DiscoveryInterval.fiveMinutes.label, "Every 5 minutes")
+        XCTAssertEqual(DiscoveryInterval.manual.label, "Manually")
+        XCTAssertNil(DiscoveryInterval.manual.timeInterval)
+    }
+
+    func testLoadsStoredManualInterval() {
+        let store = SettingsStore(defaults: defaults)
+        store.discoveryInterval = DiscoveryInterval.manual.rawValue
+
+        let settings = SettingsViewModel(store: store, launchAtLogin: FakeLaunchAtLogin())
+
+        XCTAssertEqual(settings.discoveryInterval, .manual)
     }
 }

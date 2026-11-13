@@ -37,8 +37,8 @@ struct SettingsView: View {
                         Text("Scan for new runs")
                         Spacer()
                         Picker("Scan for new runs", selection: $settings.discoveryInterval) {
-                            ForEach(SettingsViewModel.discoveryIntervalOptions, id: \.self) { interval in
-                                Text(SettingsViewModel.discoveryIntervalLabel(for: interval))
+                            ForEach(DiscoveryInterval.allCases) { interval in
+                                Text(interval.label)
                                     .tag(interval)
                             }
                         }
