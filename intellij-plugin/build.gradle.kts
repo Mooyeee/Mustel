@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "local.mustel"
-version = "0.1.0"
+version = "0.1.1"
 
 val localIde = providers.gradleProperty("mustel.localIde").orNull
 

@@ -4,7 +4,7 @@
   "icon": "images/icon.png",
   "license": "MIT",
   "description": "Control active Dart/Flutter debug sessions from the Mustel macOS menu bar.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "local",
   "repository": {
     "type": "git",

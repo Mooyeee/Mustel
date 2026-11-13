@@ -11,13 +11,21 @@ cd "$PROJECT_ROOT"
 ./scripts/generate-icons.sh
 swift build --configuration release --product mustel
 BIN_DIRECTORY="$(swift build --configuration release --product mustel --show-bin-path)"
+rm -rf "$BUILD_APP"
 mkdir -p "$BUILD_APP/Contents/MacOS" "$BUILD_APP/Contents/Resources" "$INSTALL_DIRECTORY"
 cp "$BIN_DIRECTORY/mustel" "$BUILD_APP/Contents/MacOS/mustel"
 cp "$PROJECT_ROOT/Resources/Info.plist" "$BUILD_APP/Contents/Info.plist"
-cp "$PROJECT_ROOT/Resources/Mustel-0.1.6.icns" "$BUILD_APP/Contents/Resources/Mustel-0.1.6.icns"
+cp "$PROJECT_ROOT/Resources/Mustel-0.1.7.icns" "$BUILD_APP/Contents/Resources/Mustel-0.1.7.icns"
 cp "$PROJECT_ROOT/Sources/Mustel/MustelMenuBar.png" "$BUILD_APP/Contents/Resources/MustelMenuBar.png"
 cp -R "$BIN_DIRECTORY/Mustel_Mustel.bundle" "$BUILD_APP/Contents/Resources/"
 codesign --force --sign - --identifier com.mooyee.Mustel "$BUILD_APP"
+
+if [ "${MUSTEL_SKIP_INSTALL:-0}" = "1" ]; then
+    codesign --verify --deep --strict "$BUILD_APP"
+    printf 'Built %s (not installed)\n' "$BUILD_APP"
+    exit 0
+fi
+
 ditto "$BUILD_APP" "$INSTALL_APP"
 codesign --verify --deep --strict "$INSTALL_APP"
 touch "$INSTALL_APP" "$INSTALL_APP/Contents/Info.plist"

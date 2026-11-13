@@ -65,10 +65,10 @@ npm run compile
 npx @vscode/vsce package
 ```
 
-Use a current Node.js release for VSIX packaging. Install the generated `mustel-vscode-0.1.0.vsix` in VS Code with **Extensions: Install from VSIX...**, or from a terminal:
+Use a current Node.js release for VSIX packaging. Install the generated `mustel-vscode-0.1.1.vsix` in VS Code with **Extensions: Install from VSIX...**, or from a terminal:
 
 ```sh
-code --install-extension mustel-vscode-0.1.0.vsix
+code --install-extension mustel-vscode-0.1.1.vsix
 ```
 
 Reload the VS Code window if it was already open. Start a Dart/Flutter debug session; it will appear in Mustel's **IDE sessions** section with its own hot reload and hot restart controls. The extension requires the Dart extension to be installed and enabled.
@@ -82,7 +82,7 @@ cd intellij-plugin
 ./gradlew buildPlugin
 ```
 
-Install the generated `build/distributions/mustel-intellij-0.1.0.zip` with **Settings → Plugins → Install Plugin from Disk...**, then restart the IDE. Start a Flutter run configuration; it will appear in Mustel's **IDE sessions** section with hot reload and hot restart controls.
+Install the generated `build/distributions/mustel-intellij-0.1.1.zip` with **Settings → Plugins → Install Plugin from Disk...**, then restart the IDE. Start a Flutter run configuration; it will appear in Mustel's **IDE sessions** section with hot reload and hot restart controls.
 
 The plugin targets IntelliJ Platform 2023.1 or later and requires the Flutter and Dart plugins. To build against an already installed IDE instead of downloading a platform, pass the local paths explicitly:
 
@@ -170,8 +170,10 @@ Package the installed app and both IDE bridges for a GitHub release:
 
 ```sh
 ./scripts/package-release.sh
-# or publish the release with the GitHub CLI:
+# publish the release with the GitHub CLI:
 ./scripts/package-release.sh --publish
+# package without replacing the app currently installed in ~/Applications:
+./scripts/package-release.sh --no-install --publish
 ```
 
 The script writes these assets to `.build/releases/`:

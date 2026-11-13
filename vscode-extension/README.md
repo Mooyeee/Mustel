@@ -18,7 +18,7 @@ npm run compile
 npx @vscode/vsce package
 ```
 
-Use a current Node.js release for VSIX packaging. Install the generated `mustel-vscode-0.1.0.vsix` with **Extensions: Install from VSIX...**, then reload the VS Code window if it was already open.
+Use a current Node.js release for VSIX packaging. Install the generated `mustel-vscode-0.1.1.vsix` with **Extensions: Install from VSIX...**, then reload the VS Code window if it was already open.
 
 ## Development
 

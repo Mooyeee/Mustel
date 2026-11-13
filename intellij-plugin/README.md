@@ -15,7 +15,7 @@ The Mustel Bridge exposes active Flutter run configurations to the [Mustel macOS
 ./gradlew buildPlugin
 ```
 
-The installable ZIP is written to `build/distributions/mustel-intellij-0.1.0.zip`. Install it with **Settings → Plugins → Install Plugin from Disk...**, then restart the IDE.
+The installable ZIP is written to `build/distributions/mustel-intellij-0.1.1.zip`. Install it with **Settings → Plugins → Install Plugin from Disk...**, then restart the IDE.
 
 The default build targets IntelliJ IDEA Community 2023.1 and resolves compatible Flutter/Dart plugins from the JetBrains repositories. To build against an already installed IDE instead, pass the local paths:
 

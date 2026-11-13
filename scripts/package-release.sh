@@ -2,16 +2,32 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP="$HOME/Applications/Mustel.app"
+APP="$PROJECT_ROOT/.build/Mustel.app"
 OUTPUT_DIRECTORY="$PROJECT_ROOT/.build/releases"
 PUBLISH=false
+NO_INSTALL=false
 
-if [ "${1:-}" = "--publish" ]; then
-    PUBLISH=true
-fi
+for argument in "$@"; do
+    case "$argument" in
+        --publish)
+            PUBLISH=true
+            ;;
+        --no-install)
+            NO_INSTALL=true
+            ;;
+        *)
+            printf 'Unknown option: %s\n' "$argument" >&2
+            exit 1
+            ;;
+    esac
+done
 
 cd "$PROJECT_ROOT"
-./scripts/install-app.sh
+if [ "$NO_INSTALL" = true ]; then
+    MUSTEL_SKIP_INSTALL=1 ./scripts/install-app.sh
+else
+    ./scripts/install-app.sh
+fi
 
 VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")"
 VSCODE_VERSION="$(python3 -c 'import json; print(json.load(open("vscode-extension/package.json"))["version"])')"
