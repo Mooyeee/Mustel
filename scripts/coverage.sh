@@ -7,7 +7,8 @@ cd "$PROJECT_ROOT"
 printf 'Running Swift tests with coverage…\n'
 swift test --enable-code-coverage
 
-TEST_BINARY="$(find .build -path '*MustelTests.xctest/Contents/MacOS/MustelTests' -print -quit)"
+TEST_BUNDLE="$(find .build -name '*Tests.xctest' -type d -print -quit)"
+TEST_BINARY="$(find "$TEST_BUNDLE" -type f -perm -111 -print -quit)"
 PROFILE="$(find .build -name default.profdata -print -quit)"
 if [ -z "$TEST_BINARY" ] || [ -z "$PROFILE" ]; then
     printf 'Could not find Swift coverage data.\n' >&2
