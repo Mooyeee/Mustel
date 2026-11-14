@@ -12,9 +12,17 @@ struct VSCodeBridgeClient: VSCodeBridging {
         let pid: Int32
     }
 
-    func discover() -> VSCodeBridgeDiscovery {
-        let directory = FileManager.default.homeDirectoryForCurrentUser
+    private let bridgeDirectory: URL
+
+    init(
+        bridgeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Application Support/Mustel/Bridge", isDirectory: true)
+    ) {
+        self.bridgeDirectory = bridgeDirectory
+    }
+
+    func discover() -> VSCodeBridgeDiscovery {
+        let directory = bridgeDirectory
         guard FileManager.default.fileExists(atPath: directory.path) else {
             return VSCodeBridgeDiscovery(
                 targets: [],
@@ -47,17 +55,17 @@ struct VSCodeBridgeClient: VSCodeBridging {
             do {
                 let descriptorData = try Data(contentsOf: descriptorURL)
                 let descriptor = try JSONDecoder().decode(Descriptor.self, from: descriptorData)
-                let expectedSocketPath = "/tmp/mustel-\(getuid())-\(descriptor.pid).sock"
-                guard descriptor.socketPath == expectedSocketPath else {
-                    throw BridgeError.invalidSocketPath
-                }
-                if kill(descriptor.pid, 0) != 0, errno == ESRCH {
+                if kill(descriptor.pid, 0) != 0, errno != EPERM {
                     do {
                         try FileManager.default.removeItem(at: descriptorURL)
                     } catch {
                         errors.append("Could not remove stale bridge descriptor: \(error.localizedDescription)")
                     }
                     continue
+                }
+                let expectedSocketPath = "/tmp/mustel-\(getuid())-\(descriptor.pid).sock"
+                guard descriptor.socketPath == expectedSocketPath else {
+                    throw BridgeError.invalidSocketPath
                 }
                 let response = try send(
                     ["type": "list"],

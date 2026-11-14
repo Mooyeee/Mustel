@@ -5,18 +5,38 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   swift:
     name: Swift app
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Run Swift tests
-        run: swift test
+      - name: Run Swift tests with coverage
+        run: swift test --enable-code-coverage
+      - name: Export Swift coverage
+        run: |
+          TEST_BINARY="$(find .build -path '*MustelTests.xctest/Contents/MacOS/MustelTests' -print -quit)"
+          PROFILE="$(find .build -name default.profdata -print -quit)"
+          xcrun llvm-cov export "$TEST_BINARY" -instr-profile="$PROFILE" -format=lcov > coverage.lcov
+          xcrun llvm-cov report "$TEST_BINARY" -instr-profile="$PROFILE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swift-coverage
+          path: coverage.lcov
+      - uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: coverage.lcov
+          flags: swift
+          fail_ci_if_error: false
 
   intellij:
     name: IntelliJ bridge
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -26,3 +46,31 @@ jobs:
       - name: Run IntelliJ bridge tests
         working-directory: intellij-plugin
         run: ./gradlew test --no-daemon
+
+  vscode:
+    name: VS Code bridge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        working-directory: vscode-extension
+        run: npm ci
+      - name: Compile extension
+        working-directory: vscode-extension
+        run: npm run compile
+      - name: Run extension tests with coverage
+        working-directory: vscode-extension
+        run: npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vscode-coverage
+          path: vscode-extension/coverage/lcov.info
+      - uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: vscode-extension/coverage/lcov.info
+          flags: vscode
+          fail_ci_if_error: false

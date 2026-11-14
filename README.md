@@ -9,6 +9,7 @@
 <p align="center">
   <a href="https://github.com/Mooyeee/mustel/releases/latest"><img src="https://img.shields.io/github/v/release/Mooyeee/mustel?display_name=tag&sort=semver" alt="Latest release"></a>
   <a href="https://github.com/Mooyeee/mustel/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/Mooyeee/mustel/tests.yml?branch=main&label=tests" alt="Tests"></a>
+  <a href="https://codecov.io/gh/Mooyeee/mustel"><img src="https://codecov.io/gh/Mooyeee/mustel/branch/main/graph/badge.svg" alt="Coverage"></a>
   <a href="https://github.com/Mooyeee/mustel/stargazers"><img src="https://img.shields.io/github/stars/Mooyeee/mustel?style=flat" alt="GitHub stars"></a>
   <a href="https://github.com/Mooyeee/mustel/releases"><img src="https://img.shields.io/github/downloads/Mooyeee/mustel/total" alt="Release downloads"></a>
   <a href="https://github.com/Mooyeee/mustel/commits/main"><img src="https://img.shields.io/github/last-commit/Mooyeee/mustel/main" alt="Last commit"></a>
@@ -275,6 +276,21 @@ cd intellij-plugin
 ```
 
 For plugin development, run `./gradlew runIde` to launch a sandboxed IDE with the bridge loaded. See [`intellij-plugin/README.md`](./intellij-plugin/README.md) for local-platform build options.
+
+### Coverage
+
+Run the local coverage report for the Swift app and the VS Code bridge:
+
+```sh
+./scripts/coverage.sh
+```
+
+It writes:
+
+- `swift-coverage.lcov`
+- `vscode-extension/coverage/lcov.info`
+
+The same reports are uploaded as GitHub Actions artifacts by `.github/workflows/tests.yml`. CI also uploads them to Codecov; install the Codecov GitHub app once for the repository to activate the live coverage badge.
 
 ## Known limitations
 

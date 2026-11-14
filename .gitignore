@@ -10,6 +10,9 @@ DerivedData/
 vscode-extension/node_modules/
 vscode-extension/dist/
 vscode-extension/*.vsix
+vscode-extension/coverage/
+coverage.lcov
+swift-coverage.lcov
 
 # IntelliJ plugin build artifacts
 intellij-plugin/.gradle/

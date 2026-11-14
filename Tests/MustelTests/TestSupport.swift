@@ -86,6 +86,14 @@ struct FakeDiscoveryService: FlutterDiscovering {
     }
 }
 
+struct FailingDiscoveryService: FlutterDiscovering {
+    let message: String
+
+    func discover(flutterExecutable: String) throws -> DiscoverySnapshot {
+        throw TestError.failed(message)
+    }
+}
+
 struct FakeBridge: VSCodeBridging {
     var discovery = VSCodeBridgeDiscovery(targets: [], status: "IDE bridge connected.")
     var performError: Error?

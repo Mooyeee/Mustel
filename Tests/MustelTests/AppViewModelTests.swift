@@ -148,12 +148,57 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertTrue(model.ideBridgeInstalled)
     }
 
-    private func makeModel(bridgeInstalled: Bool = false) -> AppViewModel {
+    func testDiscoveryFailureIsReported() async throws {
+        let model = makeModel(discoveryService: FailingDiscoveryService(message: "boom"))
+
+        model.refreshDiscovery()
+        for _ in 0..<100 where model.isDiscovering {
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+
+        XCTAssertEqual(model.discoveryStatus, "Discovery failed: boom")
+    }
+
+    func testIDECommandFailureIsReported() async throws {
+        let model = makeModel(bridge: FakeBridge(performError: TestError.failed("nope")))
+        let target = VSCodeDebugTarget(
+            id: "ide",
+            sessionID: "session",
+            socketPath: "/tmp/socket",
+            name: "DEV",
+            workspace: "/workspace"
+        )
+
+        model.runIDECommand(.hotReload, on: target)
+        for _ in 0..<100 where model.ideCommandStatuses[target.id]?.isFailure != true {
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+
+        XCTAssertTrue(model.ideCommandStatuses[target.id]?.isFailure == true)
+    }
+
+    func testShutdownStopsSessions() {
+        let model = makeModel()
+        model.applyDiscovery(snapshot(targets: [makeTarget(id: "attach-1")]))
+        guard let session = model.sessions.first else {
+            return XCTFail("Expected a discovered session")
+        }
+
+        model.shutdown()
+
+        XCTAssertEqual(session.state, .stopped("Disconnected"))
+    }
+
+    private func makeModel(
+        bridgeInstalled: Bool = false,
+        discoveryService: FlutterDiscovering? = nil,
+        bridge: FakeBridge = FakeBridge()
+    ) -> AppViewModel {
         let store = SettingsStore(defaults: defaults)
         return AppViewModel(
             settingsStore: store,
-            discoveryService: FakeDiscoveryService(snapshot: snapshot()),
-            bridge: FakeBridge(),
+            discoveryService: discoveryService ?? FakeDiscoveryService(snapshot: snapshot()),
+            bridge: bridge,
             ideBridgeProbe: FakeIDEBridgeProbe(installed: bridgeInstalled),
             launchAtLogin: FakeLaunchAtLogin(),
             launchForm: LaunchFormViewModel(projectPicker: FakeProjectPicker(path: nil)),

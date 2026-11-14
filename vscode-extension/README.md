@@ -24,6 +24,14 @@ Use a current Node.js release for VSIX packaging. Install the generated `mustel-
 
 Open this directory in VS Code and press **F5** to launch an Extension Development Host. Start a Dart/Flutter debug session in that host while Mustel is running.
 
+Run the bridge unit tests and coverage report:
+
+```sh
+npm test
+```
+
+This runs the path-resolution tests with Node's test runner and writes an LCOV report to `coverage/lcov.info`.
+
 ## Local communication
 
 The extension publishes a descriptor and a per-process Unix domain socket under the current user's Mustel application-support directory. The directory is restricted to that user, and the socket is owner-only. The bridge handles active Dart debug sessions in its own extension host and supports only hot reload and hot restart.

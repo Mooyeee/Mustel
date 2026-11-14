@@ -43,7 +43,13 @@ struct IDEBridgeProbe: IDEBridgeProbing {
     ]
 
     private static let cacheLock = NSLock()
-    private static var cachedVersions: (date: Date, versions: IDEBridgeVersions)?
+    private static var cachedVersions: (homePath: String, date: Date, versions: IDEBridgeVersions)?
+
+    private let homeDirectory: URL
+
+    init(homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser) {
+        self.homeDirectory = homeDirectory
+    }
 
     func isInstalled() -> Bool {
         installedVersions().isInstalled
@@ -53,17 +59,18 @@ struct IDEBridgeProbe: IDEBridgeProbing {
         Self.cacheLock.lock()
         defer { Self.cacheLock.unlock() }
 
-        if let cached = Self.cachedVersions, Date().timeIntervalSince(cached.date) < 5 {
+        if let cached = Self.cachedVersions,
+           cached.homePath == homeDirectory.path,
+           Date().timeIntervalSince(cached.date) < 5 {
             return cached.versions
         }
 
-        let versions = Self.detect()
-        Self.cachedVersions = (Date(), versions)
+        let versions = Self.detect(home: homeDirectory)
+        Self.cachedVersions = (homeDirectory.path, Date(), versions)
         return versions
     }
 
-    private static func detect() -> IDEBridgeVersions {
-        let home = FileManager.default.homeDirectoryForCurrentUser
+    private static func detect(home: URL) -> IDEBridgeVersions {
         let visualStudioCode = visualStudioCodeVersion(home: home)
         let intellij = intellijVersion(home: home)
         return IDEBridgeVersions(
