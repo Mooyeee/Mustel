@@ -4,10 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   swift:
@@ -30,7 +30,7 @@ jobs:
           path: coverage.lcov
       - uses: codecov/codecov-action@v5
         with:
-          use_oidc: true
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.lcov
           flags: swift
           fail_ci_if_error: false
@@ -71,7 +71,7 @@ jobs:
           path: vscode-extension/coverage/lcov.info
       - uses: codecov/codecov-action@v5
         with:
-          use_oidc: true
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: vscode-extension/coverage/lcov.info
           flags: vscode
           fail_ci_if_error: false
