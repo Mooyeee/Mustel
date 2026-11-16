@@ -6,6 +6,7 @@ APP="$PROJECT_ROOT/.build/Mustel.app"
 OUTPUT_DIRECTORY="$PROJECT_ROOT/.build/releases"
 PUBLISH=false
 NO_INSTALL=false
+NO_VSCODE=false
 
 for argument in "$@"; do
     case "$argument" in
@@ -14,6 +15,9 @@ for argument in "$@"; do
             ;;
         --no-install)
             NO_INSTALL=true
+            ;;
+        --no-vscode)
+            NO_VSCODE=true
             ;;
         *)
             printf 'Unknown option: %s\n' "$argument" >&2
@@ -33,7 +37,9 @@ fi
 MUSTEL_SMOKE_LAUNCH=1 ./scripts/smoke-test.sh "$APP"
 
 VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")"
-VSCODE_VERSION="$(python3 -c 'import json; print(json.load(open("vscode-extension/package.json"))["version"])')"
+if [ "$NO_VSCODE" = false ]; then
+    VSCODE_VERSION="$(python3 -c 'import json; print(json.load(open("vscode-extension/package.json"))["version"])')"
+fi
 INTELLIJ_VERSION="$(sed -n 's/^version = "\(.*\)"/\1/p' intellij-plugin/build.gradle.kts | head -1)"
 
 if [ -z "$INTELLIJ_VERSION" ]; then
@@ -46,10 +52,12 @@ if [ -s "$HOME/.nvm/nvm.sh" ]; then
     . "$HOME/.nvm/nvm.sh"
     nvm use 22 >/dev/null 2>&1 || nvm use --lts >/dev/null 2>&1 || true
 fi
-NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
-if [ "$NODE_MAJOR" -lt 18 ]; then
-    echo "Node.js 18 or later is required to package the VS Code extension." >&2
-    exit 1
+if [ "$NO_VSCODE" = false ]; then
+    NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+    if [ "$NODE_MAJOR" -lt 18 ]; then
+        echo "Node.js 18 or later is required to package the VS Code extension." >&2
+        exit 1
+    fi
 fi
 
 mkdir -p "$OUTPUT_DIRECTORY"
@@ -60,11 +68,13 @@ rm -f \
 
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$OUTPUT_DIRECTORY/Mustel.zip"
 
-(
-    cd vscode-extension
-    npm install --no-package-lock
-    npx @vscode/vsce package --out "$OUTPUT_DIRECTORY/mustel-vscode-$VSCODE_VERSION.vsix"
-)
+if [ "$NO_VSCODE" = false ]; then
+    (
+        cd vscode-extension
+        npm install --no-package-lock
+        npx @vscode/vsce package --out "$OUTPUT_DIRECTORY/mustel-vscode-$VSCODE_VERSION.vsix"
+    )
+fi
 
 (
     cd intellij-plugin
@@ -79,7 +89,9 @@ cp "$INTELLIJ_ZIP" "$OUTPUT_DIRECTORY/mustel-intellij-$INTELLIJ_VERSION.zip"
 
 printf '\nRelease assets for v%s:\n' "$VERSION"
 printf '  %s\n' "$OUTPUT_DIRECTORY/Mustel.zip"
-printf '  %s\n' "$OUTPUT_DIRECTORY/mustel-vscode-$VSCODE_VERSION.vsix"
+if [ "$NO_VSCODE" = false ]; then
+    printf '  %s\n' "$OUTPUT_DIRECTORY/mustel-vscode-$VSCODE_VERSION.vsix"
+fi
 printf '  %s\n' "$OUTPUT_DIRECTORY/mustel-intellij-$INTELLIJ_VERSION.zip"
 shasum -a 256 "$OUTPUT_DIRECTORY"/*
 
@@ -89,11 +101,11 @@ if [ "$PUBLISH" = true ]; then
         exit 1
     fi
     TAG="v$VERSION"
-    ASSETS=(
-        "$OUTPUT_DIRECTORY/Mustel.zip"
-        "$OUTPUT_DIRECTORY/mustel-vscode-$VSCODE_VERSION.vsix"
-        "$OUTPUT_DIRECTORY/mustel-intellij-$INTELLIJ_VERSION.zip"
-    )
+    ASSETS=("$OUTPUT_DIRECTORY/Mustel.zip")
+    if [ "$NO_VSCODE" = false ]; then
+        ASSETS+=("$OUTPUT_DIRECTORY/mustel-vscode-$VSCODE_VERSION.vsix")
+    fi
+    ASSETS+=("$OUTPUT_DIRECTORY/mustel-intellij-$INTELLIJ_VERSION.zip")
     if gh release view "$TAG" >/dev/null 2>&1; then
         gh release upload "$TAG" "${ASSETS[@]}" --clobber
     else
@@ -103,5 +115,5 @@ if [ "$PUBLISH" = true ]; then
     fi
     printf 'Published GitHub release %s.\n' "$TAG"
 else
-    printf '\nUpload those three files to a GitHub release tagged v%s, or rerun with --publish.\n' "$VERSION"
+    printf '\nUpload those files to a GitHub release tagged v%s, or rerun with --publish.\n' "$VERSION"
 fi

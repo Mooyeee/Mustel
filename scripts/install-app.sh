@@ -13,8 +13,21 @@ if [ "${MUSTEL_SKIP_ICONS:-0}" = "1" ]; then
 else
     ./scripts/generate-icons.sh
 fi
-swift build --configuration release --product mustel
-BIN_DIRECTORY="$(swift build --configuration release --product mustel --show-bin-path)"
+# Xcode 27 links the binary with "sdk 14.0" unless told otherwise. macOS 26+ then
+# draws controls (toggles, menus) in the legacy, non-Liquid-Glass style. Always
+# record the real SDK version in the binary.
+SDK_VERSION="$(xcrun --show-sdk-version)"
+SWIFT_BUILD_FLAGS=(
+    --configuration release --product mustel
+    -Xlinker -platform_version -Xlinker macos -Xlinker 14.0 -Xlinker "$SDK_VERSION"
+)
+swift build "${SWIFT_BUILD_FLAGS[@]}"
+BIN_DIRECTORY="$(swift build "${SWIFT_BUILD_FLAGS[@]}" --show-bin-path)"
+LINKED_SDK="$(vtool -show-build "$BIN_DIRECTORY/mustel" | awk '$1 == "sdk" { print $2 }')"
+if [ "${LINKED_SDK%%.*}" -lt 26 ]; then
+    echo "mustel is linked against SDK $LINKED_SDK: Liquid Glass controls would be disabled on macOS 26+." >&2
+    exit 1
+fi
 RESOURCE_BUNDLE="$BIN_DIRECTORY/Mustel_Mustel.bundle"
 if [ ! -d "$RESOURCE_BUNDLE" ]; then
     printf 'The build did not produce %s. Cannot package the app.\n' "$RESOURCE_BUNDLE" >&2
