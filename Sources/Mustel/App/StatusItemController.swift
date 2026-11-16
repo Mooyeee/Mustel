@@ -129,8 +129,9 @@ final class StatusItemController: NSObject {
         isHidingPanel = false
         panel.alphaValue = 0
         panel.makeKeyAndOrderFront(nil)
+        animatePanelMovement(from: 8, to: 0, timing: .easeOut)
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = 0.2
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().alphaValue = 1
         }
@@ -139,15 +140,17 @@ final class StatusItemController: NSObject {
     private func hidePanel() {
         guard panel.isVisible, !isHidingPanel else { return }
         isHidingPanel = true
+        let currentOffset = panel.contentView?.layer?.presentation()?
+            .value(forKeyPath: "transform.translation.y") as? CGFloat ?? 0
+        animatePanelMovement(from: currentOffset, to: 8, timing: .easeIn)
         sizeAnimationTimer?.invalidate()
         sizeAnimationTimer = nil
         isAnimatingSize = false
-        pendingSize = nil
         if model.launchForm.isPresented {
             model.launchForm.toggle()
         }
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = 0.2
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -156,8 +159,24 @@ final class StatusItemController: NSObject {
                 self.isHidingPanel = false
                 self.panel.orderOut(nil)
                 self.panel.alphaValue = 1
+                if let pendingSize = self.pendingSize {
+                    self.pendingSize = nil
+                    self.updatePopoverSize(pendingSize)
+                }
             }
         }
+    }
+
+    private func animatePanelMovement(from start: CGFloat, to end: CGFloat, timing: CAMediaTimingFunctionName) {
+        guard let layer = panel.contentView?.layer else { return }
+        layer.removeAnimation(forKey: "popoverMovement")
+        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
+        let animation = CABasicAnimation(keyPath: "transform.translation.y")
+        animation.fromValue = start
+        animation.toValue = end
+        animation.duration = 0.2
+        animation.timingFunction = CAMediaTimingFunction(name: timing)
+        layer.add(animation, forKey: "popoverMovement")
     }
 
     private func updatePopoverSize(_ size: NSSize) {
@@ -165,15 +184,15 @@ final class StatusItemController: NSObject {
             width: max(size.width, 380),
             height: max(size.height, 1)
         )
-        guard targetSize != currentContentSize,
-              targetSize != pendingSize else {
-            return
-        }
-
-        if isAnimatingSize {
+        if isHidingPanel {
             pendingSize = targetSize
             return
         }
+        if isAnimatingSize {
+            pendingSize = targetSize == currentContentSize ? nil : targetSize
+            return
+        }
+        guard targetSize != currentContentSize else { return }
 
         let previousSize = currentContentSize
         currentContentSize = targetSize

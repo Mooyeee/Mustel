@@ -44,9 +44,10 @@ struct PopoverContentView: View {
     var body: some View {
         ContentView(model: model)
             .padding(.top, PopoverShape.arrowHeight)
+            .frame(maxHeight: .infinity, alignment: .top)
             .background {
-                PopoverShape()
-                    .fill(.regularMaterial)
+                PopoverVisualEffect()
+                    .clipShape(PopoverShape())
             }
             .overlay {
                 PopoverShape()
@@ -59,11 +60,22 @@ struct PopoverContentView: View {
     }
 }
 
+struct PopoverVisualEffect: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .popover
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
+}
 
 struct PopoverShape: Shape {
     static let arrowHeight: CGFloat = 8
     static let arrowWidth: CGFloat = 18
-    static let cornerRadius: CGFloat = 12
+    static let cornerRadius: CGFloat = 20
 
     func path(in rect: CGRect) -> Path {
         let bodyTop = rect.minY + Self.arrowHeight

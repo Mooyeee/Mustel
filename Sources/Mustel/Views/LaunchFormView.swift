@@ -17,15 +17,21 @@ struct LaunchFormView: View {
                     .foregroundStyle(form.projectPath.isEmpty ? Color.secondary : Color.primary)
                 Spacer()
                 Button("Choose…", action: form.chooseProject)
-                    .glassButtonStyleIfAvailable()
+                    .buttonStyle(.bordered)
             }
-            Picker("Device", selection: $form.selectedDeviceID) {
-                ForEach(devices) { device in
-                    Text("\(device.name) (\(device.targetPlatform))")
-                        .tag(device.id)
+            HStack {
+                Text("Device")
+                Spacer(minLength: 8)
+                Picker("Device", selection: $form.selectedDeviceID) {
+                    ForEach(devices) { device in
+                        Text("\(device.name) (\(device.targetPlatform))")
+                            .tag(device.id)
+                    }
                 }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .disabled(devices.isEmpty)
             }
-            .disabled(devices.isEmpty)
             TextField("Entrypoint (optional, e.g. lib/main_dev.dart)", text: $form.targetPath)
                 .textFieldStyle(.roundedBorder)
             if devices.isEmpty {
@@ -43,7 +49,8 @@ struct LaunchFormView: View {
                 Button("Run", action: onRun)
                     .keyboardShortcut(.defaultAction)
                     .disabled(form.projectPath.isEmpty || form.selectedDeviceID.isEmpty)
-                    .glassButtonStyleIfAvailable()
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
             }
         }
     }

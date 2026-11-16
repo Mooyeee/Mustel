@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ContentView: View {
     let model: AppViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -26,6 +27,7 @@ struct ContentView: View {
                         Text("For existing desktop/web runs, use --vmservice-out-file or launch from here.")
                             .foregroundStyle(.secondary)
                     }
+
                 }
                 .fixedSize(horizontal: false, vertical: true)
             }
@@ -36,7 +38,6 @@ struct ContentView: View {
 
             Divider()
             SettingsView(settings: model.settings, updates: model.updates)
-            Spacer(minLength: 0)
         }
         .padding(14)
         .frame(width: 380)
@@ -57,32 +58,12 @@ struct ContentView: View {
                 model.refreshDiscovery()
                 model.refreshIDESessions()
             } label: {
-                if model.isDiscovering {
-                    HStack(spacing: 6) {
-                        ProgressView()
-                            .controlSize(.small)
-                            .frame(width: 16, height: 16)
-                        Text("Scanning active Flutter runs…")
-                            .font(.caption)
-                            .lineLimit(1)
-                            .fixedSize()
-                    }
-                    .transition(.asymmetric(
-                        insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.08)),
-                        removal: .opacity.animation(.easeOut(duration: 0.06))
-                    ))
-                } else {
-                    Image(systemName: "arrow.clockwise")
-                        .frame(width: 16, height: 16)
-                        .transition(.asymmetric(
-                            insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.08)),
-                            removal: .opacity.animation(.easeOut(duration: 0.06))
-                        ))
-                }
+                ScanningButtonLabel(isScanning: model.isDiscovering)
             }
             .disabled(model.isDiscovering)
             .help("Refresh Flutter runs and IDE sessions")
-            .squareIconButtonStyle(isExpanded: model.isDiscovering)
+            .accessibilityLabel(model.isDiscovering ? "Scanning active Flutter runs" : "Refresh Flutter runs and IDE sessions")
+            .roundIconButtonStyle()
             Button {
                 model.launchForm.toggle()
             } label: {
@@ -90,7 +71,7 @@ struct ContentView: View {
                     .frame(width: 16, height: 16)
             }
             .help(model.launchForm.isPresented ? "Cancel launch" : "Launch a Flutter project")
-            .squareIconButtonStyle()
+            .roundIconButtonStyle()
             .popover(
                 isPresented: Binding(
                     get: { model.launchForm.isPresented },
@@ -109,9 +90,12 @@ struct ContentView: View {
                 )
                 .padding(14)
                 .frame(width: 320)
+                .presentationBackground {
+                    PopoverVisualEffect()
+                }
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: model.isDiscovering)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: model.isDiscovering)
     }
 
     private var sessionSection: some View {

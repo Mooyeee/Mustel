@@ -31,19 +31,19 @@ struct SessionRow: View {
                         Image(systemName: "stop.fill")
                     }
                     .help("Stop app")
-                    .squareIconButtonStyle()
+                    .roundIconButtonStyle()
                 } else if session.target.mode == .run {
                     Button(action: onRemove) {
                         Image(systemName: "xmark")
                     }
                     .help("Remove finished run")
-                    .squareIconButtonStyle()
+                    .roundIconButtonStyle()
                 } else if !session.isRunning {
                     Button(action: onReconnect) {
                         Image(systemName: "arrow.clockwise")
                     }
                     .help("Reconnect")
-                    .squareIconButtonStyle()
+                    .roundIconButtonStyle()
                 }
                 Button(action: session.hotReload) {
                     CommandIcon(
@@ -55,7 +55,7 @@ struct SessionRow: View {
                 }
                 .help("Hot reload")
                 .disabled(!session.isReady || session.isCommandInFlight)
-                .squareIconButtonStyle()
+                .roundIconButtonStyle()
 
                 Button(action: session.hotRestart) {
                     CommandIcon(
@@ -67,7 +67,7 @@ struct SessionRow: View {
                 }
                 .help("Hot restart")
                 .disabled(!session.isReady || session.isCommandInFlight)
-                .squareIconButtonStyle()
+                .roundIconButtonStyle()
             }
             Text(session.target.mode == .run ? "Started by Mustel" : "Discovered existing run")
                 .font(.caption2)

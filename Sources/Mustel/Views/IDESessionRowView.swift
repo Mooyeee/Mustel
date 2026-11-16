@@ -56,14 +56,14 @@ struct IDESessionRow: View {
             }
             .help("Hot reload in IDE")
             .disabled(status?.isInFlight == true)
-            .squareIconButtonStyle()
+            .roundIconButtonStyle()
             Button(action: onHotRestart) {
                 CommandIcon(command: .restart, isRunning: isRestarting, completed: restartCompleted)
                     .frame(width: 16, height: 16)
             }
             .help("Hot restart in IDE")
             .disabled(status?.isInFlight == true)
-            .squareIconButtonStyle()
+            .roundIconButtonStyle()
         }
         .padding(.vertical, 4)
     }

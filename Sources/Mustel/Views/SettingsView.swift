@@ -180,6 +180,7 @@ struct SettingsView: View {
                 updates.installAvailableUpdate()
             }
             .buttonStyle(.borderedProminent)
+            .tint(.blue)
             .controlSize(.small)
         case .checking, .downloading, .installing:
             ProgressView()
@@ -190,7 +191,7 @@ struct SettingsView: View {
                 updates.checkForUpdates()
             }
             .controlSize(.small)
-            .glassButtonStyleIfAvailable()
+            .buttonStyle(.bordered)
             .disabled(updates.isBusy)
         }
     }
