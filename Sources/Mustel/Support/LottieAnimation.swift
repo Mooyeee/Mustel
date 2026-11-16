@@ -15,7 +15,7 @@ struct LottieAnimation {
         max(0, Int(ceil(outFrame - inFrame)))
     }
 
-    static func named(_ name: String, bundle: Bundle = .module) -> LottieAnimation? {
+    static func named(_ name: String, bundle: Bundle = AppResources.bundle) -> LottieAnimation? {
         let url = bundle.url(forResource: name, withExtension: "json", subdirectory: "Animations")
             ?? bundle.url(forResource: name, withExtension: "json")
         guard let url, let data = try? Data(contentsOf: url) else { return nil }

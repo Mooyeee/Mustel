@@ -35,6 +35,19 @@ jobs:
           flags: swift
           fail_ci_if_error: false
 
+  app-bundle:
+    name: macOS app bundle
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package the app
+        run: ./scripts/install-app.sh
+        env:
+          MUSTEL_SKIP_INSTALL: "1"
+          MUSTEL_SKIP_ICONS: "1"
+      - name: Smoke test the packaged app
+        run: ./scripts/smoke-test.sh
+
   intellij:
     name: IntelliJ bridge
     runs-on: ubuntu-latest

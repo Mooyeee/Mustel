@@ -8,16 +8,25 @@ INSTALL_DIRECTORY="${HOME}/Applications"
 INSTALL_APP="$INSTALL_DIRECTORY/$APP_NAME"
 
 cd "$PROJECT_ROOT"
-./scripts/generate-icons.sh
+if [ "${MUSTEL_SKIP_ICONS:-0}" = "1" ]; then
+    printf 'Skipping icon generation (MUSTEL_SKIP_ICONS=1)\n'
+else
+    ./scripts/generate-icons.sh
+fi
 swift build --configuration release --product mustel
 BIN_DIRECTORY="$(swift build --configuration release --product mustel --show-bin-path)"
+RESOURCE_BUNDLE="$BIN_DIRECTORY/Mustel_Mustel.bundle"
+if [ ! -d "$RESOURCE_BUNDLE" ]; then
+    printf 'The build did not produce %s. Cannot package the app.\n' "$RESOURCE_BUNDLE" >&2
+    exit 1
+fi
 rm -rf "$BUILD_APP"
 mkdir -p "$BUILD_APP/Contents/MacOS" "$BUILD_APP/Contents/Resources" "$INSTALL_DIRECTORY"
 cp "$BIN_DIRECTORY/mustel" "$BUILD_APP/Contents/MacOS/mustel"
 cp "$PROJECT_ROOT/Resources/Info.plist" "$BUILD_APP/Contents/Info.plist"
 cp "$PROJECT_ROOT/Resources/Mustel-0.1.7.icns" "$BUILD_APP/Contents/Resources/Mustel-0.1.7.icns"
 cp "$PROJECT_ROOT/Sources/Mustel/MustelMenuBar.png" "$BUILD_APP/Contents/Resources/MustelMenuBar.png"
-cp -R "$BIN_DIRECTORY/Mustel_Mustel.bundle" "$BUILD_APP/Contents/Resources/"
+ditto "$RESOURCE_BUNDLE" "$BUILD_APP/Contents/Resources/Mustel_Mustel.bundle"
 codesign --force --sign - --identifier com.mooyee.Mustel "$BUILD_APP"
 
 if [ "${MUSTEL_SKIP_INSTALL:-0}" = "1" ]; then

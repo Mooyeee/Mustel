@@ -6,6 +6,10 @@ enum MustelApp {
 
     @MainActor
     static func main() {
+        if CommandLine.arguments.contains("--check-resources") {
+            exit(ResourceCheck.run())
+        }
+
         let application = NSApplication.shared
         let delegate = AppDelegate()
         appDelegate = delegate

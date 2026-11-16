@@ -5,7 +5,7 @@ struct ProjectIconView: View {
     let projectPath: String
     let platformHint: String
     @State private var image: NSImage?
-    private static let fallbackImage = Bundle.module.url(forResource: "FlutterDefaultIcon", withExtension: "png")
+    private static let fallbackImage = AppResources.url(forResource: "FlutterDefaultIcon", withExtension: "png")
         .flatMap { NSImage(contentsOf: $0) }
 
     var body: some View {

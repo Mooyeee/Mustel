@@ -29,6 +29,9 @@ else
     ./scripts/install-app.sh
 fi
 
+# Fail the release when the packaged app cannot find its resources outside the build directory.
+MUSTEL_SMOKE_LAUNCH=1 ./scripts/smoke-test.sh "$APP"
+
 VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")"
 VSCODE_VERSION="$(python3 -c 'import json; print(json.load(open("vscode-extension/package.json"))["version"])')"
 INTELLIJ_VERSION="$(sed -n 's/^version = "\(.*\)"/\1/p' intellij-plugin/build.gradle.kts | head -1)"

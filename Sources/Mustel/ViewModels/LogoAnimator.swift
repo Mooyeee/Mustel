@@ -233,7 +233,7 @@ final class LogoAnimator {
 
     private static func fallbackImage(size: CGSize) -> NSImage {
         let url = Bundle.main.url(forResource: "MustelMenuBar", withExtension: "png")
-            ?? Bundle.module.url(forResource: "MustelMenuBar", withExtension: "png")
+            ?? AppResources.url(forResource: "MustelMenuBar", withExtension: "png")
         if let url, let image = NSImage(contentsOf: url) {
             image.size = size
             image.isTemplate = true

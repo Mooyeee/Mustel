@@ -258,6 +258,8 @@ The script writes these assets to `.build/releases/`:
 
 Upload them to a GitHub release whose tag is the app version, for example `v0.1.7`. The in-app updater reads the latest release from `Mooyeee/mustel` and requires `Mustel.zip` (or another `.zip` containing `Mustel.app`). It also compares the installed VS Code and IntelliJ bridge versions with the `.vsix` and IntelliJ `.zip` assets and shows a download link in Settings when a newer bridge is available. Bump `CFBundleShortVersionString` and `CFBundleVersion` in [`Resources/Info.plist`](./Resources/Info.plist), and the versions in `vscode-extension/package.json` and `intellij-plugin/build.gradle.kts`, before packaging.
 
+`package-release.sh` refuses to package an app that cannot load its resources outside the build directory: it copies `Mustel.app` to a temporary folder and runs `mustel --check-resources` (`MUSTEL_SMOKE_LAUNCH=1` adds a short launch test). Run `./scripts/smoke-test.sh` on its own after changing resources or packaging.
+
 Compile the VS Code extension:
 
 ```sh
